@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>验证码测试</title>
+    <style>
+        .captcha-display {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 120px;
+            height: 40px;
+            overflow: hidden;
+            margin: 10px;
+        }
+        
+        .captcha-display svg {
+            width: 120px !important;
+            height: 40px !important;
+            display: block !important;
+            max-width: 100% !important;
+            max-height: 100% !important;
+            background: white !important;
+        }
+        
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>验证码测试</h1>
+    <button onclick="testCaptcha()">测试验证码生成</button>
+    <div id="result"></div>
+    
+    <script>
+        function testCaptcha() {
+            fetch('/captcha/refresh')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应错误: ' + response.status);
+                    }
+                    return response.text();
+                })
+                .then(svg => {
+                    console.log('SVG内容:', svg);
+                    document.getElementById('result').innerHTML = 
+                        '<div class="captcha-display">' + svg + '</div>';
+                })
+                .catch(error => {
+                    console.error('测试失败:', error);
+                    document.getElementById('result').innerHTML = 
+                        '<div style="color:red;">测试失败: ' + error.message + '</div>';
+                });
+        }
+    </script>
+</body>
+</html> 

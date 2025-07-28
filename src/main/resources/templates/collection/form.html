@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('错题集表单')}"></head>
+<body>
+<!-- 侧边栏 -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- 主内容区域 -->
+<div class="main-content">
+    <div class="content-header">
+        <h1><i class="fas fa-bookmark"></i> 错题集表单</h1>
+        <p th:text="${collection != null ? '编辑错题集' : '新增错题集'}"></p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-edit"></i> 错题集信息</h3>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/collection/save}" method="post" class="form">
+                <input type="hidden" name="id" th:value="${collection != null ? collection.id : ''}">
+                
+                <div class="form-group">
+                    <label for="name">错题集名称</label>
+                    <input type="text" id="name" name="name" th:value="${collection != null ? collection.name : ''}" 
+                           class="form-control" required placeholder="请输入错题集名称">
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                    <a th:href="@{/collection/list}" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> 取消
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 公共脚本 -->
+<script th:replace="~{fragments/layout :: sidebar-script}"></script>
+</body>
+</html> 

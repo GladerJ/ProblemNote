@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('错题集列表')}"></head>
+<body>
+<!-- 侧边栏 -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- 主内容区域 -->
+<div class="main-content">
+    <div class="content-header">
+        <h1><i class="fas fa-bookmark"></i> 错题集管理</h1>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-list"></i> 错题集列表</h3>
+            <div style="float: right;">
+                <a href="/collection/form" class="btn btn-success">
+                    <i class="fas fa-plus"></i> 新增错题集
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>名称</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="collection : ${collections}">
+                        <td th:text="${collection.id}"></td>
+                        <td>
+                            <a th:href="@{'/collection/problem/list/' + ${collection.id}}" th:text="${collection.name}"></a>
+                        </td>
+                        <td th:text="${#dates.format(collection.createTime, 'yyyy-MM-dd HH:mm')}"></td>
+                        <td>
+                            <a th:href="@{'/collection/edit/' + ${collection.id}}" class="btn btn-sm btn-warning">
+                                <i class="fas fa-edit"></i> 编辑
+                            </a>
+                            <a th:href="@{'/collection/delete/' + ${collection.id}}" onclick="return confirm('确定要删除这个错题集吗？')" class="btn btn-sm btn-danger">
+                                <i class="fas fa-trash"></i> 删除
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(collections)}">
+                        <td colspan="4" class="text-center empty-state">
+                            <i class="fas fa-question-circle"></i>
+                            <span>暂无错题集数据，请先创建错题集</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- 公共脚本 -->
+<script th:replace="~{fragments/layout :: sidebar-script}"></script>
+</body>
+</html>

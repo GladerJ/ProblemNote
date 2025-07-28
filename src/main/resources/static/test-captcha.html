@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>验证码测试</title>
+    <style>
+        .captcha-container {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .captcha-image {
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .captcha-input {
+            margin: 10px 0;
+            padding: 5px;
+            width: 100px;
+        }
+        button {
+            margin: 10px 5px;
+            padding: 5px 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="captcha-container">
+        <h3>验证码测试</h3>
+        <img src="/captcha" alt="验证码" class="captcha-image" id="captchaImage" onclick="refreshCaptcha()">
+        <br>
+        <input type="text" class="captcha-input" id="captchaInput" placeholder="请输入验证码" maxlength="4">
+        <br>
+        <button onclick="refreshCaptcha()">刷新验证码</button>
+        <button onclick="testCaptcha()">测试验证码</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        function refreshCaptcha() {
+            const img = document.getElementById('captchaImage');
+            img.src = '/captcha?' + new Date().getTime();
+        }
+        
+        function testCaptcha() {
+            const input = document.getElementById('captchaInput');
+            const result = document.getElementById('result');
+            
+            if (input.value.trim() === '') {
+                result.innerHTML = '<p style="color: red;">请输入验证码</p>';
+                return;
+            }
+            
+            // 这里可以添加验证码验证逻辑
+            result.innerHTML = '<p style="color: green;">验证码已输入: ' + input.value + '</p>';
+        }
+        
+        // 页面加载时自动刷新验证码
+        window.onload = function() {
+            refreshCaptcha();
+        };
+    </script>
+</body>
+</html> 

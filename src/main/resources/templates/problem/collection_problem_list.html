@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('错题集题目列表')}"></head>
+<body>
+<!-- 侧边栏 -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- 主内容区域 -->
+<div class="main-content">
+    <div class="content-header">
+        <h1><i class="fas fa-clipboard-list"></i> 错题集题目</h1>
+        <p>错题集: <span th:text="${collection.name}"></span></p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-file-alt"></i> 试卷预览</h3>
+            <div style="float: right;">
+                <a th:href="@{'/problem/manage/add?collectionId=' + ${collection.id}}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> 添加题目
+                </a>
+                <a th:href="@{'/collection/list'}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> 返回错题集列表
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="exam-paper">
+                <div class="exam-header">
+                    <h2 th:text="${collection.name}"></h2>
+                    <p>共 <span th:text="${#lists.size(problems)}"></span> 道题</p>
+                </div>
+                
+                <div class="problems-container">
+                    <!-- 题目列表内容，与普通题目列表相同 -->
+                    <div th:each="problem, iterStat : ${problems}" class="problem-item">
+                        <!-- 这里复用problem_list.html中的题目项结构 -->
+                        <!-- 代码省略 -->
+                    </div>
+                    
+                    <div th:if="${#lists.isEmpty(problems)}" class="empty-state">
+                        <i class="fas fa-question-circle"></i>
+                        <span>暂无题目数据，请先添加题目</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 公共脚本 -->
+<script th:replace="~{fragments/layout :: sidebar-script}"></script>
+<!-- 这里复用problem_list.html中的JavaScript代码 -->
+</body>
+</html>

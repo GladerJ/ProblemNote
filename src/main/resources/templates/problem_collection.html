@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>题目收藏 - 题目笔记系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- 汉堡菜单按钮 -->
+    <button class="menu-toggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+    
+    <!-- 遮罩层 -->
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    
+    <!-- 侧边栏 -->
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-book-open"></i> 题目笔记</h2>
+            <p>欢迎，<span th:text="${session.user.username}"></span></p>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/" class="nav-item">
+                <i class="fas fa-home"></i> 首页
+            </a>
+            <a href="/subject/list" class="nav-item">
+                <i class="fas fa-list"></i> 科目管理
+            </a>
+            <a href="/problem/collection" class="nav-item active">
+                <i class="fas fa-star"></i> 题目收藏
+            </a>
+            <a href="/logout" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i> 退出登录
+            </a>
+        </nav>
+    </div>
+
+    <!-- 主内容区域 -->
+    <div class="main-content">
+        <div class="content-header">
+            <h1><i class="fas fa-star"></i> 题目收藏</h1>
+            <p>管理您收藏的重要题目和笔记</p>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3><i class="fas fa-bookmark"></i> 收藏列表</h3>
+            </div>
+            <div class="card-body">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag"></i> ID</th>
+                                <th><i class="fas fa-book"></i> 科目</th>
+                                <th><i class="fas fa-question-circle"></i> 题目</th>
+                                <th><i class="fas fa-calendar"></i> 收藏时间</th>
+                                <th><i class="fas fa-cogs"></i> 操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="problem : ${problems}">
+                                <td th:text="${problem.id}"></td>
+                                <td th:text="${problem.subjectName}"></td>
+                                <td th:text="${problem.title}"></td>
+                                <td th:text="${#dates.format(problem.createTime, 'yyyy-MM-dd HH:mm')}"></td>
+                                <td>
+                                    <a th:href="@{'/problem/view/' + ${problem.id}}" class="btn btn-primary">
+                                        <i class="fas fa-eye"></i> 查看
+                                    </a>
+                                    <a th:href="@{'/problem/edit/' + ${problem.id}}" class="btn btn-warning">
+                                        <i class="fas fa-edit"></i> 编辑
+                                    </a>
+                                    <a th:href="@{'/problem/remove/' + ${problem.id}}" 
+                                       onclick="return confirm('确定要取消收藏这个题目吗？')" 
+                                       class="btn btn-danger">
+                                        <i class="fas fa-trash"></i> 取消收藏
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${#lists.isEmpty(problems)}">
+                                <td colspan="5" class="empty-state">
+                                    <i class="fas fa-star"></i>
+                                    暂无收藏的题目，快去收藏一些重要题目吧！
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 30px; text-align: center;">
+                    <a th:href="@{/problem/add}" class="btn btn-success">
+                        <i class="fas fa-plus"></i> 添加题目
+                    </a>
+                    <a th:href="@{/problem/search}" class="btn btn-primary">
+                        <i class="fas fa-search"></i> 搜索题目
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载完成后的处理
+        document.addEventListener('DOMContentLoaded', function() {
+            // 可以在这里添加其他页面初始化逻辑
+            console.log('页面加载完成');
+        });
+
+        // 侧边栏切换函数
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+            
+            // 切换汉堡菜单图标
+            const icon = menuToggle.querySelector('i');
+            if (sidebar.classList.contains('open')) {
+                icon.className = 'fas fa-times';
+            } else {
+                icon.className = 'fas fa-bars';
+            }
+        }
+
+        // 关闭侧边栏函数
+        function closeSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            const menuToggle = document.querySelector('.menu-toggle');
+            
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            
+            // 恢复汉堡菜单图标
+            const icon = menuToggle.querySelector('i');
+            icon.className = 'fas fa-bars';
+        }
+
+        // 监听窗口大小变化
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 768) {
+                closeSidebar();
+            }
+        });
+    </script>
+</body>
+</html> 

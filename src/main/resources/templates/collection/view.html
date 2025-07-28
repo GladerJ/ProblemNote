@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('错题集详情')}"></head>
+<body>
+<!-- 侧边栏 -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- 主内容区域 -->
+<div class="main-content">
+    <div class="content-header">
+        <h1><i class="fas fa-bookmark"></i> 错题集详情</h1>
+        <p>错题集: <span th:text="${collection.name}"></span></p>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-file-alt"></i> 错题列表</h3>
+            <div style="float: right;">
+                <a th:href="@{'/collection/edit/' + ${collection.id}}" class="btn btn-warning">
+                    <i class="fas fa-edit"></i> 编辑错题集
+                </a>
+                <a th:href="@{/collection/list}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> 返回错题集列表
+                </a>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="exam-paper">
+                <div class="exam-header">
+                    <h2 th:text="${collection.name + ' 错题集'}"></h2>
+                    <p>共 <span th:text="${#lists.size(problems)}"></span> 道错题</p>
+                </div>
+                
+                <div class="problems-container">
+                    <div th:each="problem, iterStat : ${problems}" class="problem-item">
+                        <div class="problem-header">
+                            <span class="problem-number">第 [[${iterStat.index + 1}]] 题</span>
+                            <div class="problem-actions">
+                                <button class="btn btn-sm btn-danger remove-problem" th:data-problem-id="${problem.id}" th:data-collection-id="${collection.id}">
+                                    <i class="fas fa-times"></i> 移除
+                                </button>
+                            </div>
+                        </div>
+                        <div class="problem-content" th:utext="${problem.content}"></div>
+                        <div class="answer-toggle" th:onclick="'toggleAnswer(' + ${problem.id} + ')'">
+                            <i class="fas fa-chevron-down"></i> 
+                            <span class="toggle-text">查看答案</span>
+                        </div>
+                        <div class="problem-answer" th:id="'answer-' + ${problem.id}" style="display: none;" th:utext="${problem.answer}"></div>
+                    </div>
+                    
+                    <div th:if="${#lists.isEmpty(problems)}" class="empty-state">
+                        <i class="fas fa-question-circle"></i>
+                        <span>暂无错题，请先添加错题</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 公共脚本 -->
+<script th:replace="~{fragments/layout :: sidebar-script}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+<script>
+    // 切换答案显示/隐藏
+    function toggleAnswer(problemId) {
+        const answerElement = document.getElementById('answer-' + problemId);
+        const toggleElement = document.querySelector(`[onclick="toggleAnswer(${problemId})"]`);
+        const iconElement = toggleElement.querySelector('i');
+        const textElement = toggleElement.querySelector('.toggle-text');
+        
+        if (answerElement.style.display === 'none' || answerElement.style.display === '') {
+            // 显示答案
+            answerElement.style.display = 'block';
+            iconElement.classList.remove('fa-chevron-down');
+            iconElement.classList.add('fa-chevron-up');
+            textElement.textContent = '隐藏答案';
+        } else {
+            // 隐藏答案
+            answerElement.style.display = 'none';
+            iconElement.classList.remove('fa-chevron-up');
+            iconElement.classList.add('fa-chevron-down');
+            textElement.textContent = '查看答案';
+        }
+    }
+    
+    // 移除错题
+    document.querySelectorAll('.remove-problem').forEach(button => {
+        button.addEventListener('click', function() {
+            const problemId = this.getAttribute('data-problem-id');
+            const collectionId = this.getAttribute('data-collection-id');
+            
+            if (confirm('确定要移除这道错题吗？')) {
+                fetch('/collection/remove-problem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `collectionId=${collectionId}&problemId=${problemId}`
+                })
+                .then(response => response.text())
+                .then(result => {
+                    if (result === 'success') {
+                        location.reload();
+                    } else {
+                        alert('移除失败，请重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('操作失败，请重试');
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html> 
