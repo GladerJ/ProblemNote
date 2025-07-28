@@ -8,6 +8,7 @@ import top.mygld.problemnote.pojo.Collection;
 import top.mygld.problemnote.pojo.Problem;
 import top.mygld.problemnote.service.CollectionProblemService;
 import top.mygld.problemnote.service.CollectionService;
+import top.mygld.problemnote.common.PageResult;
 
 import java.util.List;
 
@@ -23,53 +24,73 @@ public class CollectionController {
     
     // 错题集列表页面
     @GetMapping("/list")
-    public String list(Model model) {
-        List<Collection> collections = collectionService.getAllCollections();
-        model.addAttribute("collections", collections);
+    public String list(@RequestParam(defaultValue = "1") Integer pageNum,
+                      @RequestParam(defaultValue = "10") Integer pageSize,
+                      Model model) {
+        PageResult<Collection> pageResult = collectionService.getAllCollectionsWithPage(pageNum, pageSize);
+        model.addAttribute("collections", pageResult.getList());
+        model.addAttribute("pageResult", pageResult);
         return "collection/list";
     }
     
     // 错题集详情页面
     @GetMapping("/view/{id}")
-    public String view(@PathVariable Long id, Model model) {
+    public String view(@PathVariable Long id, 
+                      @RequestParam(defaultValue = "1") Integer pageNum,
+                      @RequestParam(defaultValue = "10") Integer pageSize,
+                      Model model) {
         Collection collection = collectionService.getCollectionById(id);
-        List<Problem> problems = collectionProblemService.getProblemsByCollectionId(id);
+        PageResult<Problem> pageResult = collectionProblemService.getProblemsByCollectionIdWithPage(id, pageNum, pageSize);
         
         model.addAttribute("collection", collection);
-        model.addAttribute("problems", problems);
+        model.addAttribute("problems", pageResult.getList());
+        model.addAttribute("pageResult", pageResult);
         return "collection/view";
     }
     
     // 添加错题集页面
     @GetMapping("/add")
-    public String addPage() {
+    public String addPage(@RequestParam(defaultValue = "1") Integer pageNum,
+                         @RequestParam(defaultValue = "10") Integer pageSize,
+                         Model model) {
+        model.addAttribute("pageNum", pageNum);
+        model.addAttribute("pageSize", pageSize);
         return "collection/form";
     }
     
     // 保存错题集
     @PostMapping("/save")
-    public String save(Collection collection) {
+    public String save(Collection collection,
+                      @RequestParam(defaultValue = "1") Integer pageNum,
+                      @RequestParam(defaultValue = "10") Integer pageSize) {
         if (collection.getId() == null) {
             collectionService.addCollection(collection);
         } else {
             collectionService.updateCollection(collection);
         }
-        return "redirect:/collection/list";
+        return "redirect:/collection/list?pageNum=" + pageNum + "&pageSize=" + pageSize;
     }
     
     // 编辑错题集页面
     @GetMapping("/edit/{id}")
-    public String editPage(@PathVariable Long id, Model model) {
+    public String editPage(@PathVariable Long id,
+                          @RequestParam(defaultValue = "1") Integer pageNum,
+                          @RequestParam(defaultValue = "10") Integer pageSize,
+                          Model model) {
         Collection collection = collectionService.getCollectionById(id);
         model.addAttribute("collection", collection);
+        model.addAttribute("pageNum", pageNum);
+        model.addAttribute("pageSize", pageSize);
         return "collection/form";
     }
     
     // 删除错题集
     @GetMapping("/delete/{id}")
-    public String delete(@PathVariable Long id) {
+    public String delete(@PathVariable Long id,
+                        @RequestParam(defaultValue = "1") Integer pageNum,
+                        @RequestParam(defaultValue = "10") Integer pageSize) {
         collectionService.deleteCollection(id);
-        return "redirect:/collection/list";
+        return "redirect:/collection/list?pageNum=" + pageNum + "&pageSize=" + pageSize;
     }
     
     // 添加题目到错题集

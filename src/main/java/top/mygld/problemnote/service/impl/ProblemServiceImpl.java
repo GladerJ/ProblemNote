@@ -30,6 +30,26 @@ public class ProblemServiceImpl implements ProblemService {
     public List<Problem> getProblemsByTagId(Integer tagId) { // 实现此方法
         return problemMapper.findByTagId(tagId);
     }
+    
+    @Override
+    public PageResult<Problem> getProblemsByTagIdWithPage(Integer tagId, Integer pageNum, Integer pageSize) {
+        // 使用PageHelper进行分页
+        PageHelper.startPage(pageNum, pageSize);
+        List<Problem> problems = problemMapper.findByTagId(tagId);
+        
+        // 获取分页信息
+        PageInfo<Problem> pageInfo = new PageInfo<>(problems);
+        
+        // 构建PageResult
+        PageResult<Problem> pageResult = new PageResult<>();
+        pageResult.setList(problems);
+        pageResult.setTotal(pageInfo.getTotal());
+        pageResult.setPageNum(pageInfo.getPageNum());
+        pageResult.setPageSize(pageInfo.getPageSize());
+        pageResult.setPages(pageInfo.getPages());
+        
+        return pageResult;
+    }
 
     @Override
     public List<Problem> getFavoriteProblems() {

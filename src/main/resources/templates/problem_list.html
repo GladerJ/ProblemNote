@@ -16,12 +16,16 @@
         <div class="card-header">
             <h3><i class="fas fa-file-alt"></i> 试卷预览</h3>
             <div style="float: right;">
-                <a th:href="@{'/problem/manage/add?tagId=' + ${tag.id} + '&subjectId=' + ${subject.id}}" class="btn btn-success">
+                <a th:href="@{/problem/manage/add(tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum}, pageSize=${pageResult.pageSize})}" class="btn btn-success">
                     <i class="fas fa-plus"></i> 添加题目
                 </a>
                 <!-- 新增：导出错题按钮 -->
                 <button class="btn btn-danger" data-toggle="modal" data-target="#exportModal">
                     <i class="fas fa-file-export"></i> 导出错题
+                </button>
+                <!-- 清除标记按钮 -->
+                <button class="btn btn-warning" onclick="clearAllMarks()">
+                    <i class="fas fa-trash"></i> 清除标记
                 </button>
                 <a th:href="@{'/tag/list?subjectId=' + ${subject.id}}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> 返回知识点列表
@@ -32,23 +36,23 @@
             <div class="exam-paper">
                 <div class="exam-header">
                     <h2 th:text="${subject.name + ' - ' + tag.name + ' 练习题'}"></h2>
-                    <p>共 <span th:text="${#lists.size(problems)}"></span> 道题</p>
+                    <p>共 <span th:text="${pageResult.total}"></span> 道题，当前第 <span th:text="${pageResult.pageNum}"></span> 页，共 <span th:text="${pageResult.pages}"></span> 页</p>
                 </div>
                 
                 <div class="problems-container">
                     <div th:each="problem, iterStat : ${problems}" class="problem-item">
                         <div class="problem-header">
-                            <span class="problem-number">第 [[${iterStat.index + 1}]] 题</span>
+                            <span class="problem-number">第 [[${(pageResult.pageNum - 1) * pageResult.pageSize + iterStat.index + 1}]] 题</span>
                             <!-- 错题标记按钮 -->
                             <button class="btn btn-sm btn-link star-toggle" th:data-problem-id="${problem.id}">
                                 <i class="far fa-star"></i> 
                                 <span>标记</span>
                             </button>
                             <div class="problem-actions">
-                                <a th:href="@{'/problem/manage/edit/' + ${problem.id} + '?tagId=' + ${tag.id} + '&subjectId=' + ${subject.id}}" class="btn btn-sm btn-warning">
+                                <a th:href="@{/problem/manage/edit/{id}(id=${problem.id}, tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum}, pageSize=${pageResult.pageSize})}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
-                                <a th:href="@{'/problem/manage/delete/' + ${problem.id} + '?tagId=' + ${tag.id} + '&subjectId=' + ${subject.id}}"
+                                <a th:href="@{/problem/manage/delete/{id}(id=${problem.id}, tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum}, pageSize=${pageResult.pageSize})}"
                                    onclick="return confirm('确定要删除这道题吗？')" class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash"></i> 删除
                                 </a>
@@ -65,6 +69,36 @@
                     <div th:if="${#lists.isEmpty(problems)}" class="empty-state">
                         <i class="fas fa-question-circle"></i>
                         <span>暂无题目数据，请先添加题目</span>
+                    </div>
+                </div>
+                
+                <!-- 分页组件 -->
+                <div th:if="${pageResult != null && pageResult.total > 0}" class="pagination-container">
+                    <div class="pagination-info">
+                        <span>共 <strong th:text="${pageResult.total}">0</strong> 条记录，</span>
+                        <span>第 <strong th:text="${pageResult.pageNum}">1</strong> 页，</span>
+                        <span>共 <strong th:text="${pageResult.pages}">1</strong> 页</span>
+                    </div>
+                    <div class="pagination">
+                        <a th:if="${pageResult.hasPreviousPage}"
+                           th:href="@{/problem/list(tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum - 1}, pageSize=${pageResult.pageSize})}"
+                           class="page-link">
+                            <i class="fas fa-chevron-left"></i> 上一页
+                        </a>
+
+                        <span th:each="pageNum : ${#numbers.sequence(1, pageResult.pages)}"
+                              th:if="${pageNum >= pageResult.pageNum - 2 && pageNum <= pageResult.pageNum + 2}"
+                              class="page-link"
+                              th:classappend="${pageNum == pageResult.pageNum} ? 'active' : ''">
+                            <a th:href="@{/problem/list(tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageNum}, pageSize=${pageResult.pageSize})}"
+                               th:text="${pageNum}">1</a>
+                        </span>
+
+                        <a th:if="${pageResult.hasNextPage}"
+                           th:href="@{/problem/list(tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum + 1}, pageSize=${pageResult.pageSize})}"
+                           class="page-link">
+                            下一页 <i class="fas fa-chevron-right"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -306,6 +340,34 @@
     }
     
 
+    
+    // 清除所有标记
+    function clearAllMarks() {
+        if (markedProblems.size === 0) {
+            alert('当前没有标记的题目');
+            return;
+        }
+        
+        if (confirm('确定要清除所有标记吗？此操作不可恢复。')) {
+            markedProblems.clear();
+            saveMarkedProblems();
+            
+            // 重置所有标记按钮的状态
+            document.querySelectorAll('.star-toggle').forEach(btn => {
+                const icon = btn.querySelector('i');
+                const text = btn.querySelector('span');
+                
+                icon.classList.remove('fas', 'text-warning');
+                icon.classList.add('far');
+                text.textContent = '标记';
+                btn.setAttribute('data-is-marked', 'false');
+            });
+            
+            alert('已清除所有标记');
+        }
+    }
+    
+
 </script>
 
 <style>
@@ -356,10 +418,24 @@
         margin-bottom: 15px;
         line-height: 1.6;
     }
+    .empty-state {
+        text-align: center;
+        padding: 40px 0;
+    }
+    .empty-state i {
+        display: block;
+        margin: 0 auto 15px;
+        font-size: 32px;
+        color: #ccc;
+    }
+    .empty-state span {
+        display: block;
+        color: #666;
+    }
 </style>
 <!-- 导出错题模态框 -->
 <div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="exportModalLabel">导出错题</h5>
@@ -370,7 +446,7 @@
             <div class="modal-body">
                 <div class="form-group">
                     <label for="collectionSelect">选择错题集</label>
-                    <select class="form-control" id="collectionSelect">
+                    <select class="form-control" id="collectionSelect" style="width: 100%;">
                         <option value="">请选择错题集</option>
                         <option th:each="collection : ${collections}" th:value="${collection.id}" th:text="${collection.name}"></option>
                     </select>

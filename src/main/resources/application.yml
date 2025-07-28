@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 9982
 
 spring:
   datasource:
@@ -13,7 +13,7 @@ spring:
     restart:
       enabled: true  # 启用热部署
       additional-paths: src/main/java  # 监控的目录
-      exclude: static/**,public/**,templates/**  # 排除的目录
+      exclude: static/**,public/**,templates/**,META-INF/maven/**,META-INF/resources/**,resources/**,static/**,public/**,templates/**  # 排除的目录
     livereload:
       enabled: true  # 启用LiveReload
       port: 35729  # LiveReload端口

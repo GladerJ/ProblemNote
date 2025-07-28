@@ -46,7 +46,7 @@
                th:classappend="${#strings.startsWith(#httpServletRequest.requestURI, '/collection')} ? 'active' : ''">
                 <i class="fas fa-star"></i> 错题集
             </a>
-            <a href="/logout" class="nav-item">
+            <a href="#" class="nav-item" onclick="confirmLogout()">
                 <i class="fas fa-sign-out-alt"></i> 退出登录
             </a>
         </nav>
@@ -98,6 +98,30 @@
             closeSidebar();
         }
     });
+    
+    // 确认退出登录
+    function confirmLogout() {
+        // 检查是否有未导出的标记题目
+        const markedProblems = localStorage.getItem('markedProblems');
+        let hasMarkedProblems = false;
+        
+        if (markedProblems) {
+            const markedArray = JSON.parse(markedProblems);
+            hasMarkedProblems = markedArray.length > 0;
+        }
+        
+        let message = '确定要退出登录吗？';
+        if (hasMarkedProblems) {
+            message = '您还有未导出的标记题目，退出登录将清除这些标记。确定要退出吗？';
+        }
+        
+        if (confirm(message)) {
+            // 清除标记数据
+            localStorage.removeItem('markedProblems');
+            // 跳转到退出登录页面
+            window.location.href = '/logout';
+        }
+    }
 </script>
 
 <!-- 面包屑导航片段 -->
@@ -138,9 +162,11 @@
 </div>
 
 <!-- 空状态片段 -->
-<td th:fragment="empty-state(message, icon)" class="empty-state">
-    <i th:class="'fas fa-' + ${icon}"></i>
-    <span th:text="${message}"></span>
-</td>
+<div th:fragment="empty-state(message, icon)" class="empty-state" style="text-align: left; padding: 40px 20px; display: none;">
+    <div style="display: flex; align-items: center;">
+        <i th:class="'fas fa-' + ${icon}" style="font-size: 24px; color: #ccc; margin-right: 15px;"></i>
+        <span th:text="${message}" style="display: inline-block; color: #666;"></span>
+    </div>
+</div>
 
 </html>

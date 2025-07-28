@@ -42,7 +42,7 @@
                                 <i class="fas fa-edit"></i> 编辑
                             </a>
                             <a th:href="@{'/tag/delete/' + ${tag.id} + '?subjectId=' + ${subject.id}}"
-                               onclick="return confirm('确定要删除这个知识点吗？')"
+                               onclick="return confirm('确定要删除这个知识点吗？此操作将同时删除该知识点下所有题目！')"
                                class="btn btn-danger">
                                 <i class="fas fa-trash"></i> 删除
                             </a>
@@ -58,6 +58,9 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- 空状态提示 -->
+            <div th:if="${#lists.isEmpty(tags)}" th:replace="~{fragments/layout :: empty-state('暂无知识点数据，请先添加知识点', 'inbox')}" style="display: block;"></div>
 
             <div style="margin-top: 30px; text-align: center;">
                 <a th:href="@{'/tag/add?subjectId=' + ${subject.id}}" class="btn btn-success">

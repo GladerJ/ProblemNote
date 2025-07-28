@@ -37,8 +37,8 @@
                             <a th:href="@{'/subject/edit/' + ${subject.id}}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> 编辑
                             </a>
-                            <a th:href="@{'/subject/delete/' + ${subject.id}}"
-                               onclick="return confirm('确定要删除这个科目吗？')"
+                            <a th:href="@{/subject/delete/{id}(id=${subject.id})}"
+                               onclick="return confirm('确定要删除这个科目吗？此操作将同时删除该科目下所有知识点和题目！')"
                                class="btn btn-danger">
                                 <i class="fas fa-trash"></i> 删除
                             </a>
@@ -50,6 +50,9 @@
                     </tbody>
                 </table>
             </div>
+            
+            <!-- 空状态提示 -->
+            <div th:if="${#lists.isEmpty(subjects)}" th:replace="~{fragments/layout :: empty-state('暂无科目数据，请先添加科目', 'inbox')}" style="display: block;"></div>
 
             <div style="margin-top: 30px; text-align: center;">
                 <a th:href="@{/subject/add}" class="btn btn-success">

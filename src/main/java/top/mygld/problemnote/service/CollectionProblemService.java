@@ -2,6 +2,7 @@ package top.mygld.problemnote.service;
 
 import top.mygld.problemnote.pojo.CollectionProblem;
 import top.mygld.problemnote.pojo.Problem;
+import top.mygld.problemnote.common.PageResult;
 import java.util.List;
 
 public interface CollectionProblemService {
@@ -14,6 +15,9 @@ public interface CollectionProblemService {
     
     // 获取错题集中的所有题目
     List<Problem> getProblemsByCollectionId(Long collectionId);
+    
+    // 获取错题集中的题目（分页）
+    PageResult<Problem> getProblemsByCollectionIdWithPage(Long collectionId, Integer pageNum, Integer pageSize);
     
     // 检查题目是否在错题集中
     boolean isProblemInCollection(Long collectionId, Integer problemId);
@@ -29,4 +33,10 @@ public interface CollectionProblemService {
     
     // 批量添加题目到错题集
     void addProblemsToCollection(Long collectionId, List<Integer> problemIds);
+    
+    // 根据错题集ID删除所有关联记录
+    void deleteByCollectionId(Long collectionId);
+    
+    // 根据题目ID删除所有关联记录
+    void deleteByProblemId(Integer problemId);
 }

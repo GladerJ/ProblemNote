@@ -47,7 +47,7 @@ html, body {
 }
 
 .sidebar-header {
-    padding: 30px 20px 20px;
+    padding: 20px 20px 15px; /* 将顶部padding从30px改为20px，底部从20px改为15px */
     border-bottom: 1px solid #e0e0e0;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;

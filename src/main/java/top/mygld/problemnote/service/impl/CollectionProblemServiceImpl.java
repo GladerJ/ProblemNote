@@ -7,6 +7,9 @@ import top.mygld.problemnote.mapper.ProblemMapper;
 import top.mygld.problemnote.pojo.CollectionProblem;
 import top.mygld.problemnote.pojo.Problem;
 import top.mygld.problemnote.service.CollectionProblemService;
+import top.mygld.problemnote.common.PageResult;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 
 import java.util.List;
 
@@ -37,6 +40,16 @@ public class CollectionProblemServiceImpl implements CollectionProblemService {
     @Override
     public void removeProblemFromCollection(Long collectionId, Integer problemId) {
         collectionProblemMapper.deleteByCollectionAndProblem(collectionId, problemId);
+    }
+    
+    @Override
+    public void deleteByCollectionId(Long collectionId) {
+        collectionProblemMapper.deleteByCollectionId(collectionId);
+    }
+    
+    @Override
+    public void deleteByProblemId(Integer problemId) {
+        collectionProblemMapper.deleteByProblemId(problemId);
     }
     
     @Override
@@ -76,5 +89,25 @@ public class CollectionProblemServiceImpl implements CollectionProblemService {
         for (Integer problemId : problemIds) {
             addProblemToCollection(collectionId, problemId);
         }
+    }
+    
+    @Override
+    public PageResult<Problem> getProblemsByCollectionIdWithPage(Long collectionId, Integer pageNum, Integer pageSize) {
+        // 使用PageHelper进行分页
+        PageHelper.startPage(pageNum, pageSize);
+        List<Problem> problems = problemMapper.findByCollectionId(collectionId);
+        
+        // 获取分页信息
+        PageInfo<Problem> pageInfo = new PageInfo<>(problems);
+        
+        // 构建PageResult
+        PageResult<Problem> pageResult = new PageResult<>();
+        pageResult.setList(problems);
+        pageResult.setTotal(pageInfo.getTotal());
+        pageResult.setPageNum(pageInfo.getPageNum());
+        pageResult.setPageSize(pageInfo.getPageSize());
+        pageResult.setPages(pageInfo.getPages());
+        
+        return pageResult;
     }
 }

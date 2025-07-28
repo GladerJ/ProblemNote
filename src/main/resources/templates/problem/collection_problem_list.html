@@ -51,6 +51,22 @@
                     </div>
                     
                     <div th:if="${#lists.isEmpty(problems)}" class="empty-state">
+                        <style>
+                            .empty-state {
+                                text-align: center;
+                                padding: 40px 0;
+                            }
+                            .empty-state i {
+                                display: block;
+                                margin: 0 auto 15px;
+                                font-size: 32px;
+                                color: #ccc;
+                            }
+                            .empty-state span {
+                                display: block;
+                                color: #666;
+                            }
+                        </style>
                         <i class="fas fa-question-circle"></i>
                         <span>暂无题目数据</span>
                     </div>
@@ -64,8 +80,30 @@
 <script th:replace="~{fragments/layout :: sidebar-script}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+
+<!-- 检查是否已有KaTeX，如果没有则加载 -->
+<script>
+if (typeof katex === 'undefined') {
+    // 动态加载KaTeX CSS
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css';
+    document.head.appendChild(link);
+    
+    // 动态加载KaTeX JS
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js';
+    script.onload = function() {
+        console.log('KaTeX动态加载完成');
+        // KaTeX加载完成后立即渲染
+        setTimeout(renderLatex, 100);
+    };
+    document.head.appendChild(script);
+} else {
+    console.log('KaTeX已存在，直接使用');
+}
+</script>
+
 <script>
     // 切换答案显示/隐藏
     function toggleAnswer(problemId) {
@@ -87,23 +125,72 @@
         }
     }
     
-    // 页面加载完成后渲染LaTeX公式
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('错题集题目页面加载完成');
+    // 已标记的题目ID集合
+    let collectedProblemIds = new Set();
+    
+    // 增强版LaTeX渲染函数，包含更多调试信息
+    function renderLatex() {
+        console.log('=== 开始LaTeX渲染 ===');
+        console.log('KaTeX可用状态:', typeof katex !== 'undefined');
         
-        // 渲染所有LaTeX公式
-        function renderLatex() {
-            document.querySelectorAll('.problem-content, .problem-answer').forEach(el => {
-                if (el.dataset.latexRendered) return;
-                
-                let content = el.innerHTML;
-                
-                // 处理块级公式 $$...$$
+        if (typeof katex === 'undefined') {
+            console.error('KaTeX库未加载，等待加载...');
+            return false;
+        }
+        
+        // 找到所有需要处理的元素
+        const elements = document.querySelectorAll('.problem-content, .problem-answer');
+        console.log('找到需要处理的元素数量:', elements.length);
+        
+        let processedCount = 0;
+        let hasLatexContent = false;
+        
+        elements.forEach((el, index) => {
+            // 跳过已经处理过的元素
+            if (el.dataset.latexRendered) {
+                console.log(`元素${index}已渲染，跳过`);
+                return;
+            }
+            
+            let content = el.innerHTML;
+            if (!content) {
+                console.log(`元素${index}内容为空，跳过`);
+                return;
+            }
+            
+            // 检查是否包含LaTeX内容
+            const hasBlockLatex = /\$\$([\s\S]*?)\$\$/.test(content);
+            const hasInlineLatex = /\$(.*?)\$/.test(content);
+            
+            if (!hasBlockLatex && !hasInlineLatex) {
+                console.log(`元素${index}不包含LaTeX内容`);
+                el.dataset.latexRendered = 'true'; // 标记为已处理
+                return;
+            }
+            
+            hasLatexContent = true;
+            console.log(`元素${index}包含LaTeX内容:`, {
+                hasBlockLatex,
+                hasInlineLatex,
+                contentPreview: content.substring(0, 100) + '...'
+            });
+            
+            let originalContent = content;
+            
+            try {
+                // 处理块级公式 $...$
                 content = content.replace(/\$\$([\s\S]*?)\$\$/g, function(match, formula) {
                     try {
-                        return katex.renderToString(formula.trim(), {throwOnError: false, displayMode: true});
+                        const cleanFormula = formula.trim();
+                        console.log('处理块级公式:', cleanFormula.substring(0, 50) + '...');
+                        const rendered = katex.renderToString(cleanFormula, {
+                            throwOnError: false,
+                            displayMode: true
+                        });
+                        console.log('块级公式渲染成功');
+                        return rendered;
                     } catch (e) {
-                        console.warn('LaTeX渲染错误:', e);
+                        console.warn('块级LaTeX渲染错误:', e, '公式:', formula);
                         return match;
                     }
                 });
@@ -111,53 +198,45 @@
                 // 处理行内公式 $...$
                 content = content.replace(/\$(.*?)\$/g, function(match, formula) {
                     try {
-                        return katex.renderToString(formula.trim(), {throwOnError: false, displayMode: false});
+                        const cleanFormula = formula.trim();
+                        console.log('处理行内公式:', cleanFormula.substring(0, 50) + '...');
+                        const rendered = katex.renderToString(cleanFormula, {
+                            throwOnError: false,
+                            displayMode: false
+                        });
+                        console.log('行内公式渲染成功');
+                        return rendered;
                     } catch (e) {
-                        console.warn('LaTeX渲染错误:', e);
+                        console.warn('行内LaTeX渲染错误:', e, '公式:', formula);
                         return match;
                     }
                 });
                 
-                el.innerHTML = content;
+                // 检查内容是否发生变化
+                if (content !== originalContent) {
+                    el.innerHTML = content;
+                    console.log(`元素${index}LaTeX渲染完成，内容已更新`);
+                } else {
+                    console.log(`元素${index}LaTeX渲染无变化`);
+                }
+                
                 el.dataset.latexRendered = 'true';
-            });
-        }
-        
-        renderLatex();
-        
-        // 初始化错题标记功能
-        initProblemCollection();
-        
-        // 确认导出按钮点击事件
-        document.getElementById('confirmExport').addEventListener('click', function() {
-            if (collectedProblemIds.size === 0) {
-                alert('请先标记错题');
-                return;
+                processedCount++;
+                
+            } catch (error) {
+                console.error(`元素${index}LaTeX渲染过程中发生错误:`, error);
             }
-            
-            if (!document.getElementById('collectionName').value.trim()) {
-                alert('请输入错题集名称');
-                return;
-            }
-            
-            // 添加调试信息，确认参数是否正确传递
-            console.log('导出参数:', {
-                sourceCollectionId: document.querySelector('input[name="sourceCollectionId"]').value,
-                collectionName: document.getElementById('collectionName').value,
-                problemIds: Array.from(collectedProblemIds)
-            });
-            
-            document.getElementById('exportForm').submit();
         });
-    });
-    
-    // 已标记的题目ID集合
-    let collectedProblemIds = new Set();
+        
+        console.log('=== LaTeX渲染完成 ===');
+        console.log('处理的元素数量:', processedCount);
+        console.log('是否发现LaTeX内容:', hasLatexContent);
+        
+        return processedCount > 0;
+    }
     
     // 初始化错题标记功能
     function initProblemCollection() {
-        // 获取已标记的题目ID（实际应从后端获取）
-        
         // 绑定标记按钮点击事件
         document.querySelectorAll('.star-toggle').forEach(btn => {
             const problemId = btn.getAttribute('data-problem-id');
@@ -197,6 +276,8 @@
     // 更新导出模态框中的选中题目
     function updateExportModalProblems() {
         const container = document.getElementById('selectedProblems');
+        if (!container) return;
+        
         container.innerHTML = '';
         
         if (collectedProblemIds.size === 0) {
@@ -214,6 +295,85 @@
         
         container.innerHTML += `<p>共 ${collectedProblemIds.size} 道错题将被导出</p>`;
     }
+    
+    // 关键修复：完全按照problem_list.html的方式初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('错题集题目页面加载完成');
+        
+        // 延迟执行，确保KaTeX完全加载
+        setTimeout(function() {
+            console.log('开始初始LaTeX渲染');
+            renderLatex();
+        }, 100);
+        
+        // 监听答案显示事件，对新显示的内容进行LaTeX渲染 - 与problem_list.html完全一致
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const target = mutation.target;
+                    if (target.classList.contains('problem-answer') && target.style.display === 'block') {
+                        // 答案刚刚显示，重新渲染LaTeX
+                        if (!target.dataset.latexRendered) {
+                            console.log('检测到答案显示，重新渲染LaTeX');
+                            renderLatex();
+                        }
+                    }
+                }
+            });
+        });
+        
+        // 观察所有答案元素的样式变化 - 与problem_list.html完全一致
+        document.querySelectorAll('.problem-answer').forEach(el => {
+            observer.observe(el, { attributes: true, attributeFilter: ['style'] });
+        });
+        
+        // 初始化错题标记功能
+        initProblemCollection();
+        
+        // 确认导出按钮点击事件
+        const confirmExportBtn = document.getElementById('confirmExport');
+        if (confirmExportBtn) {
+            confirmExportBtn.addEventListener('click', function() {
+                if (collectedProblemIds.size === 0) {
+                    alert('请先标记错题');
+                    return;
+                }
+                
+                const collectionNameInput = document.getElementById('collectionName');
+                if (!collectionNameInput || !collectionNameInput.value.trim()) {
+                    alert('请输入错题集名称');
+                    return;
+                }
+                
+                console.log('导出参数:', {
+                    sourceCollectionId: document.querySelector('input[name="sourceCollectionId"]').value,
+                    collectionName: collectionNameInput.value,
+                    problemIds: Array.from(collectedProblemIds)
+                });
+                
+                document.getElementById('exportForm').submit();
+            });
+        }
+    });
+    
+    // 调试函数：手动测试LaTeX渲染
+    function testLatexRender() {
+        console.log('手动测试LaTeX渲染');
+        console.log('KaTeX可用:', typeof katex !== 'undefined');
+        if (typeof katex !== 'undefined') {
+            try {
+                const testFormula = 'x^2 + y^2 = z^2';
+                const result = katex.renderToString(testFormula, {throwOnError: false});
+                console.log('测试渲染结果:', result);
+            } catch (e) {
+                console.error('测试渲染失败:', e);
+            }
+        }
+    }
+    
+    // 添加到window对象便于调试
+    window.testLatexRender = testLatexRender;
+    window.renderLatex = renderLatex;
 </script>
 
 <style>
@@ -277,7 +437,6 @@
                 </button>
             </div>
             <div class="modal-body">
-                <!-- 修正表单提交地址并添加Thymeleaf URL表达式 -->
                 <form id="exportForm" th:action="@{/collection/export}" method="post">
                     <input type="hidden" name="sourceCollectionId" th:value="${collection.id}">
                     <div class="form-group">

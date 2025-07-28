@@ -141,7 +141,12 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>top.mygld.problemnote.ProblemNoteApplication</mainClass>
-                    <skip>true</skip>
+                    <excludes>
+                        <exclude>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </exclude>
+                    </excludes>
                 </configuration>
                 <executions>
                     <execution>

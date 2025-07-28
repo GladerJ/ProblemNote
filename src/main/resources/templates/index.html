@@ -17,26 +17,7 @@
     <div class="sidebar-overlay" onclick="closeSidebar()"></div>
     
     <!-- 侧边栏 -->
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h2><i class="fas fa-book-open"></i> 题目笔记</h2>
-            <p>欢迎，<span th:text="${session.user.username}"></span></p>
-        </div>
-        <nav class="sidebar-nav">
-            <a href="/" class="nav-item active">
-                <i class="fas fa-home"></i> 首页
-            </a>
-            <a href="/subject/list" class="nav-item">
-                <i class="fas fa-list"></i> 科目管理
-            </a>
-            <a href="/collection/list" class="nav-item" th:classappend="${#strings.startsWith(#httpServletRequest.requestURI, '/collection/list')} ? 'active' : ''">
-                <i class="fas fa-star"></i> 错题集
-            </a>
-            <a href="/logout" class="nav-item">
-                <i class="fas fa-sign-out-alt"></i> 退出登录
-            </a>
-        </nav>
-    </div>
+<div th:replace="~{fragments/layout :: sidebar}"></div>
 
     <!-- 主内容区域 -->
     <div class="main-content">
@@ -45,21 +26,37 @@
             <p>高效管理您的学习笔记和题目</p>
         </div>
 
+        <style>
+            .project-intro {
+                text-align: left !important;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+            }
+            .project-intro p {
+                margin-bottom: 15px;
+            }
+            .project-intro a {
+                color: #007bff;
+                text-decoration: none;
+            }
+            .project-intro a:hover {
+                text-decoration: underline;
+            }
+        </style>
+
         <div class="card">
             <div class="card-header">
-                <h3><i class="fas fa-tasks"></i> 快速操作</h3>
+                <h3><i class="fas fa-info-circle"></i> 项目介绍</h3>
             </div>
             <div class="card-body">
-                <div style="display: flex; gap: 30px; justify-content: center; flex-wrap: wrap;">
-                    <a href="/subject/list" class="btn btn-primary btn-home">
-                        <i class="fas fa-list"></i>
-                        科目管理
-                    </a>
-                    
-                    <a href="/problem/list" class="btn btn-success btn-home">
-                        <i class="fas fa-star"></i>
-                        题目标记
-                    </a>
+                <div class="project-intro">
+                    <p style="font-size: 16px; line-height: 1.8;">
+                        题目笔记系统是一个基于Spring Boot的学习辅助工具，帮助用户高效管理学习笔记和题目。<br>
+                        项目作者: <a href="https://github.com/GladerJ/ProblemNote" target="_blank">Glader</a><br>
+                        联系我: <a href="mailto:1@mygld.top">1@mygld.top</a><br>
+                        我的博客: <a href="https://blog.mygld.top" target="_blank">https://blog.mygld.top</a>
+                    </p>
                 </div>
             </div>
         </div>

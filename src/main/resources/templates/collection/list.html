@@ -20,6 +20,11 @@
             <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
         </div>
         <div class="card-body">
+            <!-- 分页信息 -->
+            <div th:if="${pageResult != null && pageResult.total > 0}" class="pagination-info" style="margin-bottom: 20px;">
+                <p>共 <span th:text="${pageResult.total}"></span> 个错题集，当前第 <span th:text="${pageResult.pageNum}"></span> 页，共 <span th:text="${pageResult.pages}"></span> 页</p>
+            </div>
+            
             <div class="table-container">
                 <table>
                     <thead>
@@ -34,14 +39,14 @@
                         <td th:text="${collection.id}"></td>
                         <td th:text="${collection.name}"></td>
                         <td>
-                            <a th:href="@{'/collection/view/' + ${collection.id}}" class="btn btn-info">
+                            <a th:href="@{/collection/view/{id}(id=${collection.id})}" class="btn btn-info">
                                 <i class="fas fa-eye"></i> 查看题目
                             </a>
-                            <a th:href="@{'/collection/edit/' + ${collection.id}}" class="btn btn-warning">
+                            <a th:href="@{/collection/edit/{id}(id=${collection.id}, pageNum=${pageResult.pageNum}, pageSize=${pageResult.pageSize})}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> 编辑
                             </a>
-                            <a th:href="@{'/collection/delete/' + ${collection.id}}"
-                               onclick="return confirm('确定要删除这个错题集吗？')"
+                            <a th:href="@{/collection/delete/{id}(id=${collection.id}, pageNum=${pageResult.pageNum}, pageSize=${pageResult.pageSize})}"
+                               onclick="return confirm('确定要删除这个错题集吗？此操作将同时删除该错题集中的所有题目关联！')"
                                class="btn btn-danger">
                                 <i class="fas fa-trash"></i> 删除
                             </a>
@@ -55,13 +60,40 @@
             </div>
 
             <div style="margin-top: 30px; text-align: center;">
-                <a th:href="@{/collection/add}" class="btn btn-success">
+                <a th:href="@{/collection/add(pageNum=${pageResult.pageNum}, pageSize=${pageResult.pageSize})}" class="btn btn-success">
                     <i class="fas fa-plus"></i> 新增错题集
                 </a>
             </div>
 
             <!-- 分页组件 -->
-            <div th:replace="~{fragments/layout :: pagination(${pageResult}, '/collection/list')}"></div>
+            <div th:if="${pageResult != null && pageResult.total > 0}" class="pagination-container">
+                <div class="pagination-info">
+                    <span>共 <strong th:text="${pageResult.total}">0</strong> 条记录，</span>
+                    <span>第 <strong th:text="${pageResult.pageNum}">1</strong> 页，</span>
+                    <span>共 <strong th:text="${pageResult.pages}">1</strong> 页</span>
+                </div>
+                <div class="pagination">
+                    <a th:if="${pageResult.hasPreviousPage}"
+                       th:href="@{/collection/list(pageNum=${pageResult.pageNum - 1}, pageSize=${pageResult.pageSize})}"
+                       class="page-link">
+                        <i class="fas fa-chevron-left"></i> 上一页
+                    </a>
+
+                    <span th:each="pageNum : ${#numbers.sequence(1, pageResult.pages)}"
+                          th:if="${pageNum >= pageResult.pageNum - 2 && pageNum <= pageResult.pageNum + 2}"
+                          class="page-link"
+                          th:classappend="${pageNum == pageResult.pageNum} ? 'active' : ''">
+                        <a th:href="@{/collection/list(pageNum=${pageNum}, pageSize=${pageResult.pageSize})}"
+                           th:text="${pageNum}">1</a>
+                    </span>
+
+                    <a th:if="${pageResult.hasNextPage}"
+                       th:href="@{/collection/list(pageNum=${pageResult.pageNum + 1}, pageSize=${pageResult.pageSize})}"
+                       class="page-link">
+                        下一页 <i class="fas fa-chevron-right"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 </div>

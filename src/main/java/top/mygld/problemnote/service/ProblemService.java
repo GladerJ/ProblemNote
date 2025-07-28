@@ -11,6 +11,8 @@ public interface ProblemService {
     List<Problem> getProblemsBySubjectAndTag(Integer subjectId, Integer tagId);
 
     List<Problem> getProblemsByTagId(Integer tagId); // 添加此方法
+    
+    PageResult<Problem> getProblemsByTagIdWithPage(Integer tagId, Integer pageNum, Integer pageSize);
 
     int addProblem(Problem problem);
 

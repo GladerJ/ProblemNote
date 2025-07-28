@@ -1,11 +1,14 @@
 package top.mygld.problemnote.service;
 
 import top.mygld.problemnote.pojo.Collection;
+import top.mygld.problemnote.common.PageResult;
 import java.util.List;
 
 public interface CollectionService {
     
     List<Collection> getAllCollections();
+    
+    PageResult<Collection> getAllCollectionsWithPage(Integer pageNum, Integer pageSize);
     
     Collection getCollectionById(Long id);
     

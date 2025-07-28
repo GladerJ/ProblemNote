@@ -28,13 +28,13 @@
             <div class="exam-paper">
                 <div class="exam-header">
                     <h2 th:text="${collection.name + ' 错题集'}"></h2>
-                    <p>共 <span th:text="${#lists.size(problems)}"></span> 道错题</p>
+                    <p>共 <span th:text="${pageResult.total}"></span> 道错题，当前第 <span th:text="${pageResult.pageNum}"></span> 页，共 <span th:text="${pageResult.pages}"></span> 页</p>
                 </div>
                 
                 <div class="problems-container">
                     <div th:each="problem, iterStat : ${problems}" class="problem-item">
                         <div class="problem-header">
-                            <span class="problem-number">第 [[${iterStat.index + 1}]] 题</span>
+                            <span class="problem-number">第 [[${(pageResult.pageNum - 1) * pageResult.pageSize + iterStat.index + 1}]] 题</span>
                             <div class="problem-actions">
                                 <button class="btn btn-sm btn-danger remove-problem" th:data-problem-id="${problem.id}" th:data-collection-id="${collection.id}">
                                     <i class="fas fa-times"></i> 移除
@@ -52,6 +52,36 @@
                     <div th:if="${#lists.isEmpty(problems)}" class="empty-state">
                         <i class="fas fa-question-circle"></i>
                         <span>暂无错题，请先添加错题</span>
+                    </div>
+                </div>
+                
+                <!-- 分页组件 -->
+                <div th:if="${pageResult != null && pageResult.total > 0}" class="pagination-container">
+                    <div class="pagination-info">
+                        <span>共 <strong th:text="${pageResult.total}">0</strong> 条记录，</span>
+                        <span>第 <strong th:text="${pageResult.pageNum}">1</strong> 页，</span>
+                        <span>共 <strong th:text="${pageResult.pages}">1</strong> 页</span>
+                    </div>
+                    <div class="pagination">
+                        <a th:if="${pageResult.hasPreviousPage}"
+                           th:href="@{/collection/view/{id}(id=${collection.id}, pageNum=${pageResult.pageNum - 1}, pageSize=${pageResult.pageSize})}"
+                           class="page-link">
+                            <i class="fas fa-chevron-left"></i> 上一页
+                        </a>
+
+                        <span th:each="pageNum : ${#numbers.sequence(1, pageResult.pages)}"
+                              th:if="${pageNum >= pageResult.pageNum - 2 && pageNum <= pageResult.pageNum + 2}"
+                              class="page-link"
+                              th:classappend="${pageNum == pageResult.pageNum} ? 'active' : ''">
+                            <a th:href="@{/collection/view/{id}(id=${collection.id}, pageNum=${pageNum}, pageSize=${pageResult.pageSize})}"
+                               th:text="${pageNum}">1</a>
+                        </span>
+
+                        <a th:if="${pageResult.hasNextPage}"
+                           th:href="@{/collection/view/{id}(id=${collection.id}, pageNum=${pageResult.pageNum + 1}, pageSize=${pageResult.pageSize})}"
+                           class="page-link">
+                            下一页 <i class="fas fa-chevron-right"></i>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -74,19 +104,74 @@
         const textElement = toggleElement.querySelector('.toggle-text');
         
         if (answerElement.style.display === 'none' || answerElement.style.display === '') {
-            // 显示答案
             answerElement.style.display = 'block';
             iconElement.classList.remove('fa-chevron-down');
             iconElement.classList.add('fa-chevron-up');
             textElement.textContent = '隐藏答案';
         } else {
-            // 隐藏答案
             answerElement.style.display = 'none';
             iconElement.classList.remove('fa-chevron-up');
             iconElement.classList.add('fa-chevron-down');
             textElement.textContent = '查看答案';
         }
     }
+    
+    // 添加LaTeX渲染函数
+    function renderLatex() {
+        const elements = document.querySelectorAll('.problem-content, .problem-answer');
+        elements.forEach(el => {
+            if (el.dataset.latexRendered) return;
+            
+            let content = el.innerHTML;
+            // 处理块级公式: $$...$$ 和 \[...\]
+            content = content.replace(/(\$\$|\\\[)([\s\S]*?)(\$\$|\\\])/g, (match, start, formula, end) => {
+                try {
+                    return katex.renderToString(formula.trim(), {throwOnError: false, displayMode: true});
+                } catch (e) {
+                    console.warn('块级LaTeX渲染错误:', e);
+                    return match;
+                }
+            });
+            
+            // 处理行内公式: $...$ 和 \\(...\)
+            content = content.replace(/(\$|\\\()(.*?)(\$|\\\))/g, (match, start, formula, end) => {
+                try {
+                    return katex.renderToString(formula.trim(), {throwOnError: false, displayMode: false});
+                } catch (e) {
+                    console.warn('行内LaTeX渲染错误:', e);
+                    return match;
+                }
+            });
+            
+            el.innerHTML = content;
+            el.dataset.latexRendered = 'true';
+        });
+    }
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        // 初始渲染LaTeX
+        renderLatex();
+        
+        // 监听答案显示事件
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const target = mutation.target;
+                    if (target.classList.contains('problem-answer') && target.style.display === 'block') {
+                        if (!target.dataset.latexRendered) {
+                            renderLatex();
+                        }
+                    }
+                }
+            });
+        });
+        
+        // 观察所有答案元素
+        document.querySelectorAll('.problem-answer').forEach(el => {
+            observer.observe(el, { attributes: true, attributeFilter: ['style'] });
+        });
+    });
     
     // 移除错题
     document.querySelectorAll('.remove-problem').forEach(button => {
@@ -119,4 +204,4 @@
     });
 </script>
 </body>
-</html> 
+</html>
