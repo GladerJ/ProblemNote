@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${tag != null ? '编辑知识点' : '新增知识点'})}"></head>
+<body>
+<!-- 侧边栏 -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- 主内容区域 -->
+<div class="main-content">
+    <div class="content-header">
+        <h1><i class="fas fa-tag"></i> <span th:text="${tag != null ? '编辑' : '新增'}">新增</span>知识点</h1>
+        <p>管理 "<span th:text="${subject.name}"></span>" 科目下的知识点</p>
+    </div>
+
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <a href="/subject/list"><i class="fas fa-list"></i> 科目管理</a>
+        <span class="separator">/</span>
+        <a th:href="@{'/tag/list?subjectId=' + ${subject.id}}" th:text="${subject.name}">当前科目</a>
+        <span class="separator">/</span>
+        <span th:text="${tag != null ? '编辑知识点' : '新增知识点'}">新增知识点</span>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-edit"></i> <span th:text="${tag != null ? '编辑' : '新增'}">新增</span>知识点</h3>
+        </div>
+        <div class="card-body">
+            <form th:action="${tag != null ? '/tag/edit' : '/tag/add'}" method="post" class="form-container">
+                <input type="hidden" name="subjectId" th:value="${subject.id}">
+                <input type="hidden" name="id" th:value="${tag != null ? tag.id : ''}">
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-book"></i> 所属科目
+                    </label>
+                    <input type="text"
+                           class="form-control"
+                           th:value="${subject.name}"
+                           readonly
+                           style="background-color: #f8f9fa;">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-tag"></i> 知识点名称
+                    </label>
+                    <input type="text"
+                           name="name"
+                           class="form-control"
+                           placeholder="请输入知识点名称"
+                           th:value="${tag != null ? tag.name : ''}"
+                           required
+                           maxlength="100">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                    <a th:href="@{'/tag/list?subjectId=' + ${subject.id}}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> 返回
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 公共脚本 + 页面特定脚本 -->
+<script th:replace="~{fragments/layout :: sidebar-script}"></script>
+<script>
+    // 页面特定逻辑
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('知识点表单页面加载完成');
+
+        // 自动聚焦到名称输入框
+        const nameInput = document.querySelector('input[name="name"]');
+        if (nameInput) {
+            nameInput.focus();
+        }
+    });
+</script>
+</body>
+</html>

@@ -4,8 +4,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import top.mygld.problemnote.pojo.Problem;
 import top.mygld.problemnote.service.ProblemService;
+import top.mygld.problemnote.common.PageResult;
 
 import java.util.List;
 
@@ -16,13 +18,21 @@ public class PageController {
     private ProblemService problemService;
 
     /**
-     * 题目收藏页面
+     * 题目标记页面
      */
     @GetMapping("/problem/collection")
-    public String problemCollection(Model model) {
-        // 获取收藏的题目列表
-        List<Problem> problems = problemService.getFavoriteProblems();
-        model.addAttribute("problems", problems);
+    public String problemCollection(@RequestParam(defaultValue = "1") int pageNum, Model model) {
+        try {
+            // 获取标记的题目列表（分页）
+            int pageSize = 10; // 每页10条记录
+            PageResult<Problem> pageResult = problemService.getFavoriteProblemsByPage(pageNum, pageSize);
+            model.addAttribute("problems", pageResult.getList());
+            model.addAttribute("pageResult", pageResult);
+        } catch (Exception e) {
+            // 如果出现异常，返回空列表
+            model.addAttribute("problems", new java.util.ArrayList<>());
+            model.addAttribute("pageResult", new PageResult<>(new java.util.ArrayList<>(), 0, pageNum, 10));
+        }
         return "problem_collection";
     }
 
@@ -39,8 +49,13 @@ public class PageController {
      */
     @GetMapping("/problem/edit/{id}")
     public String problemEdit(Integer id, Model model) {
-        Problem problem = problemService.getProblemById(id);
-        model.addAttribute("problem", problem);
+        try {
+            Problem problem = problemService.getProblemById(id);
+            model.addAttribute("problem", problem);
+        } catch (Exception e) {
+            // 如果出现异常，返回空对象
+            model.addAttribute("problem", new Problem());
+        }
         return "problem_form";
     }
 
@@ -49,8 +64,13 @@ public class PageController {
      */
     @GetMapping("/problem/view/{id}")
     public String problemView(Integer id, Model model) {
-        Problem problem = problemService.getProblemById(id);
-        model.addAttribute("problem", problem);
+        try {
+            Problem problem = problemService.getProblemById(id);
+            model.addAttribute("problem", problem);
+        } catch (Exception e) {
+            // 如果出现异常，返回空对象
+            model.addAttribute("problem", new Problem());
+        }
         return "problem_view";
     }
 

@@ -14,33 +14,45 @@
 
     <div class="card">
         <div class="card-header">
-            <h3><i class="fas fa-file-alt"></i> 试卷预览</h3>
+            <h3><i class="fas fa-file-alt"></i> 题目列表</h3>
             <div style="float: right;">
-                <a th:href="@{'/problem/manage/add?collectionId=' + ${collection.id}}" class="btn btn-success">
-                    <i class="fas fa-plus"></i> 添加题目
-                </a>
+                <!-- 添加返回按钮 -->
                 <a th:href="@{'/collection/list'}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> 返回错题集列表
                 </a>
+                <!-- 导出错题按钮 -->
+                <button class="btn btn-danger" data-toggle="modal" data-target="#exportModal">
+                    <i class="fas fa-file-export"></i> 导出错题
+                </button>
             </div>
         </div>
         <div class="card-body">
             <div class="exam-paper">
                 <div class="exam-header">
-                    <h2 th:text="${collection.name}"></h2>
+                    <h2 th:text="${collection.name + ' 错题集'}"></h2>
                     <p>共 <span th:text="${#lists.size(problems)}"></span> 道题</p>
                 </div>
                 
                 <div class="problems-container">
-                    <!-- 题目列表内容，与普通题目列表相同 -->
                     <div th:each="problem, iterStat : ${problems}" class="problem-item">
-                        <!-- 这里复用problem_list.html中的题目项结构 -->
-                        <!-- 代码省略 -->
+                        <div class="problem-header">
+                            <span class="problem-number">第 [[${iterStat.index + 1}]] 题</span>
+                            <!-- 保留错题标记按钮 -->
+                            <button class="btn btn-sm btn-link star-toggle" th:data-problem-id="${problem.id}">
+                                <i class="far fa-star"></i> 标记
+                            </button>
+                        </div>
+                        <div class="problem-content" th:utext="${problem.content}"></div>
+                        <div class="answer-toggle" th:onclick="'toggleAnswer(' + ${problem.id} + ')'">
+                            <i class="fas fa-chevron-down"></i> 
+                            <span class="toggle-text">查看答案</span>
+                        </div>
+                        <div class="problem-answer" th:id="'answer-' + ${problem.id}" style="display: none;" th:utext="${problem.answer}"></div>
                     </div>
                     
                     <div th:if="${#lists.isEmpty(problems)}" class="empty-state">
                         <i class="fas fa-question-circle"></i>
-                        <span>暂无题目数据，请先添加题目</span>
+                        <span>暂无题目数据</span>
                     </div>
                 </div>
             </div>
@@ -50,6 +62,240 @@
 
 <!-- 公共脚本 -->
 <script th:replace="~{fragments/layout :: sidebar-script}"></script>
-<!-- 这里复用problem_list.html中的JavaScript代码 -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.4/dist/katex.min.css">
+<script>
+    // 切换答案显示/隐藏
+    function toggleAnswer(problemId) {
+        const answerElement = document.getElementById('answer-' + problemId);
+        const toggleElement = document.querySelector(`[onclick="toggleAnswer(${problemId})"]`);
+        const iconElement = toggleElement.querySelector('i');
+        const textElement = toggleElement.querySelector('.toggle-text');
+        
+        if (answerElement.style.display === 'none' || answerElement.style.display === '') {
+            answerElement.style.display = 'block';
+            iconElement.classList.remove('fa-chevron-down');
+            iconElement.classList.add('fa-chevron-up');
+            textElement.textContent = '隐藏答案';
+        } else {
+            answerElement.style.display = 'none';
+            iconElement.classList.remove('fa-chevron-up');
+            iconElement.classList.add('fa-chevron-down');
+            textElement.textContent = '查看答案';
+        }
+    }
+    
+    // 页面加载完成后渲染LaTeX公式
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('错题集题目页面加载完成');
+        
+        // 渲染所有LaTeX公式
+        function renderLatex() {
+            document.querySelectorAll('.problem-content, .problem-answer').forEach(el => {
+                if (el.dataset.latexRendered) return;
+                
+                let content = el.innerHTML;
+                
+                // 处理块级公式 $$...$$
+                content = content.replace(/\$\$([\s\S]*?)\$\$/g, function(match, formula) {
+                    try {
+                        return katex.renderToString(formula.trim(), {throwOnError: false, displayMode: true});
+                    } catch (e) {
+                        console.warn('LaTeX渲染错误:', e);
+                        return match;
+                    }
+                });
+                
+                // 处理行内公式 $...$
+                content = content.replace(/\$(.*?)\$/g, function(match, formula) {
+                    try {
+                        return katex.renderToString(formula.trim(), {throwOnError: false, displayMode: false});
+                    } catch (e) {
+                        console.warn('LaTeX渲染错误:', e);
+                        return match;
+                    }
+                });
+                
+                el.innerHTML = content;
+                el.dataset.latexRendered = 'true';
+            });
+        }
+        
+        renderLatex();
+        
+        // 初始化错题标记功能
+        initProblemCollection();
+        
+        // 确认导出按钮点击事件
+        document.getElementById('confirmExport').addEventListener('click', function() {
+            if (collectedProblemIds.size === 0) {
+                alert('请先标记错题');
+                return;
+            }
+            
+            if (!document.getElementById('collectionName').value.trim()) {
+                alert('请输入错题集名称');
+                return;
+            }
+            
+            // 添加调试信息，确认参数是否正确传递
+            console.log('导出参数:', {
+                sourceCollectionId: document.querySelector('input[name="sourceCollectionId"]').value,
+                collectionName: document.getElementById('collectionName').value,
+                problemIds: Array.from(collectedProblemIds)
+            });
+            
+            document.getElementById('exportForm').submit();
+        });
+    });
+    
+    // 已标记的题目ID集合
+    let collectedProblemIds = new Set();
+    
+    // 初始化错题标记功能
+    function initProblemCollection() {
+        // 获取已标记的题目ID（实际应从后端获取）
+        
+        // 绑定标记按钮点击事件
+        document.querySelectorAll('.star-toggle').forEach(btn => {
+            const problemId = btn.getAttribute('data-problem-id');
+            const icon = btn.querySelector('i');
+            
+            if (collectedProblemIds.has(problemId)) {
+                icon.classList.remove('far');
+                icon.classList.add('fas');
+                btn.classList.add('text-warning');
+            }
+            
+            btn.addEventListener('click', function() {
+                toggleProblemCollection(problemId, icon, btn);
+            });
+        });
+    }
+    
+    // 切换题目标记状态
+    function toggleProblemCollection(problemId, icon, btn) {
+        if (icon.classList.contains('far')) {
+            // 标记题目
+            icon.classList.remove('far');
+            icon.classList.add('fas');
+            btn.classList.add('text-warning');
+            collectedProblemIds.add(problemId);
+        } else {
+            // 取消标记
+            icon.classList.remove('fas');
+            icon.classList.add('far');
+            btn.classList.remove('text-warning');
+            collectedProblemIds.delete(problemId);
+        }
+        
+        updateExportModalProblems();
+    }
+    
+    // 更新导出模态框中的选中题目
+    function updateExportModalProblems() {
+        const container = document.getElementById('selectedProblems');
+        container.innerHTML = '';
+        
+        if (collectedProblemIds.size === 0) {
+            container.innerHTML = '<p>暂无标记的错题</p>';
+            return;
+        }
+        
+        collectedProblemIds.forEach(problemId => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'problemIds';
+            input.value = problemId;
+            container.appendChild(input);
+        });
+        
+        container.innerHTML += `<p>共 ${collectedProblemIds.size} 道错题将被导出</p>`;
+    }
+</script>
+
+<style>
+    .answer-toggle {
+        cursor: pointer;
+        color: #007bff;
+        margin: 10px 0;
+        padding: 5px 0;
+        user-select: none;
+    }
+    
+    .answer-toggle:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+    
+    .problem-answer {
+        margin-top: 10px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #28a745;
+        border-radius: 4px;
+    }
+    
+    .problem-item {
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+    
+    .problem-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .problem-number {
+        font-weight: bold;
+        color: #495057;
+    }
+    
+    .problem-content {
+        margin-bottom: 15px;
+        line-height: 1.6;
+    }
+</style>
+
+<!-- 导出错题模态框 -->
+<div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">导出错题</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 修正表单提交地址并添加Thymeleaf URL表达式 -->
+                <form id="exportForm" th:action="@{/collection/export}" method="post">
+                    <input type="hidden" name="sourceCollectionId" th:value="${collection.id}">
+                    <div class="form-group">
+                        <label for="collectionName">错题集名称</label>
+                        <input type="text" class="form-control" id="collectionName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>选择错题（默认全选已标记题目）</label>
+                        <div id="selectedProblems"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmExport">导出</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

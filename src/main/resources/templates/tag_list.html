@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('知识点管理')}"></head>
+<body>
+<!-- 侧边栏 -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- 主内容区域 -->
+<div class="main-content">
+    <div class="content-header">
+        <h1><i class="fas fa-tags"></i> 知识点管理</h1>
+        <p>管理 "<span th:text="${subject.name}"></span>" 科目下的知识点</p>
+    </div>
+
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <a href="/subject/list"><i class="fas fa-list"></i> 科目管理</a>
+        <span class="separator">/</span>
+        <span th:text="${subject.name}">当前科目</span>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-tags"></i> 知识点列表</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-container">
+                <table>
+                    <thead>
+                    <tr>
+                        <th><i class="fas fa-hashtag"></i> ID</th>
+                        <th><i class="fas fa-tag"></i> 知识点名称</th>
+                        <th><i class="fas fa-cogs"></i> 操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="tag : ${tags}">
+                        <td th:text="${tag.id}"></td>
+                        <td th:text="${tag.name}"></td>
+                        <td>
+                            <a th:href="@{'/tag/edit/' + ${tag.id} + '?subjectId=' + ${subject.id}}" class="btn btn-warning">
+                                <i class="fas fa-edit"></i> 编辑
+                            </a>
+                            <a th:href="@{'/tag/delete/' + ${tag.id} + '?subjectId=' + ${subject.id}}"
+                               onclick="return confirm('确定要删除这个知识点吗？')"
+                               class="btn btn-danger">
+                                <i class="fas fa-trash"></i> 删除
+                            </a>
+                            <!-- 添加查看题目按钮 -->
+                            <a th:href="@{'/problem/list?tagId=' + ${tag.id} + '&subjectId=' + ${subject.id}}" class="btn btn-primary">
+                                <i class="fas fa-eye"></i> 查看题目
+                            </a>
+                        </td>
+                    </tr>
+                    <tr th:if="${#lists.isEmpty(tags)}">
+                        <td th:replace="~{fragments/layout :: empty-state('暂无知识点数据，请先添加知识点', 'inbox')}" colspan="3"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <a th:href="@{'/tag/add?subjectId=' + ${subject.id}}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> 新增知识点
+                </a>
+                <a href="/subject/list" class="btn btn-secondary" style="margin-left: 10px;">
+                    <i class="fas fa-arrow-left"></i> 返回科目列表
+                </a>
+            </div>
+
+            <!-- 分页组件 -->
+            <div th:replace="~{fragments/layout :: pagination(${pageResult}, '/tag/list?subjectId=' + ${subject.id})}"></div>
+        </div>
+    </div>
+</div>
+
+<!-- 公共脚本 -->
+<script th:replace="~{fragments/layout :: sidebar-script}"></script>
+<script>
+    // 页面特定逻辑
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('知识点页面加载完成');
+    });
+</script>
+</body>
+</html>

@@ -1,73 +1,80 @@
-package com.example.problemnote.service.impl;
+package top.mygld.problemnote.service.impl;
 
-import com.example.problemnote.mapper.CollectionMapper;
-import com.example.problemnote.mapper.CollectionProblemMapper;
-import com.example.problemnote.pojo.Collection;
-import com.example.problemnote.pojo.CollectionProblem;
-import com.example.problemnote.service.CollectionProblemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import top.mygld.problemnote.mapper.CollectionProblemMapper;
+import top.mygld.problemnote.mapper.ProblemMapper;
+import top.mygld.problemnote.pojo.CollectionProblem;
+import top.mygld.problemnote.pojo.Problem;
+import top.mygld.problemnote.service.CollectionProblemService;
 
-import java.util.Date;
 import java.util.List;
 
 @Service
 public class CollectionProblemServiceImpl implements CollectionProblemService {
-
+    
     @Autowired
     private CollectionProblemMapper collectionProblemMapper;
-
+    
     @Autowired
-    private CollectionMapper collectionMapper;
-
+    private ProblemMapper problemMapper;
+    
     @Override
-    public int addToCollection(Long collectionId, Long problemId) {
-        if (collectionProblemMapper.exists(collectionId, problemId)) {
-            return 0; // 已存在，无需重复添加
+    public void addProblemToCollection(Long collectionId, Integer problemId) {
+        System.out.println("添加题目到错题集: collectionId=" + collectionId + ", problemId=" + problemId);
+        // 检查是否已存在
+        if (!isProblemInCollection(collectionId, problemId)) {
+            CollectionProblem collectionProblem = new CollectionProblem();
+            collectionProblem.setCollectionId(collectionId);
+            collectionProblem.setProblemId(problemId);
+            int result = collectionProblemMapper.insert(collectionProblem);
+            System.out.println("插入结果: " + result);
+        } else {
+            System.out.println("题目已在错题集中");
         }
-        CollectionProblem cp = new CollectionProblem();
-        cp.setCollectionId(collectionId);
-        cp.setProblemId(problemId);
-        cp.setAddTime(new Date());
-        return collectionProblemMapper.insert(cp);
     }
-
+    
     @Override
-    public int removeFromCollection(Long collectionId, Long problemId) {
-        return collectionProblemMapper.deleteByCollectionIdAndProblemId(collectionId, problemId);
+    public void removeProblemFromCollection(Long collectionId, Integer problemId) {
+        collectionProblemMapper.deleteByCollectionAndProblem(collectionId, problemId);
     }
-
+    
     @Override
-    public List<Long> getProblemIdsByCollectionId(Long collectionId) {
-        return collectionProblemMapper.selectProblemIdsByCollectionId(collectionId);
+    public List<Problem> getProblemsByCollectionId(Long collectionId) {
+        return problemMapper.findByCollectionId(collectionId);
     }
-
+    
     @Override
-    public boolean isProblemInCollection(Long collectionId, Long problemId) {
-        return collectionProblemMapper.exists(collectionId, problemId);
+    public boolean isProblemInCollection(Long collectionId, Integer problemId) {
+        CollectionProblem cp = collectionProblemMapper.findByCollectionAndProblem(collectionId, problemId);
+        return cp != null;
     }
-
-    @Transactional
+    
     @Override
-    public int createCollectionWithProblems(String name, List<Long> problemIds, Long userId) {
-        // 创建错题集
-        Collection collection = new Collection();
-        collection.setName(name);
-        collection.setUserId(userId);
-        collection.setCreateTime(new Date());
-        collection.setUpdateTime(new Date());
-        collectionMapper.insert(collection);
-
-        // 批量添加题目到错题集
-        for (Long problemId : problemIds) {
-            CollectionProblem cp = new CollectionProblem();
-            cp.setCollectionId(collection.getId());
-            cp.setProblemId(problemId);
-            cp.setAddTime(new Date());
-            collectionProblemMapper.insert(cp);
+    public List<Problem> getAllMarkedProblems() {
+        return problemMapper.findMarkedProblems();
+    }
+    
+    @Override
+    public List<Problem> getMarkedProblemsByTag(Integer tagId) {
+        return problemMapper.findMarkedProblemsByTag(tagId);
+    }
+    
+    @Override
+    public void exportMarkedProblems(Long collectionId, Integer tagId) {
+        // 获取指定标签下的所有错题
+        List<Problem> markedProblems = getMarkedProblemsByTag(tagId);
+        
+        // 将错题添加到指定错题集
+        for (Problem problem : markedProblems) {
+            addProblemToCollection(collectionId, problem.getId());
         }
-
-        return 1;
+    }
+    
+    @Override
+    public void addProblemsToCollection(Long collectionId, List<Integer> problemIds) {
+        for (Integer problemId : problemIds) {
+            addProblemToCollection(collectionId, problemId);
+        }
     }
 }

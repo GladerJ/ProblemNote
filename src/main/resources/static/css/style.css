@@ -29,6 +29,23 @@ html, body {
     transition: transform 0.3s ease;
 }
 
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
 .sidebar-header {
     padding: 30px 20px 20px;
     border-bottom: 1px solid #e0e0e0;
@@ -92,7 +109,6 @@ html, body {
     margin-left: 280px;
     padding: 30px;
     min-height: 100vh;
-    transition: margin-left 0.3s ease;
 }
 
 .content-header {
@@ -101,8 +117,6 @@ html, body {
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     margin-bottom: 30px;
-    opacity: 0;
-    animation: fadeIn 0.6s ease-out forwards;
 }
 
 .content-header h1 {
@@ -129,8 +143,7 @@ html, body {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
     overflow: hidden;
     margin-bottom: 30px;
-    opacity: 0;
-    animation: fadeIn 0.6s ease-out 0.2s forwards;
+    opacity: 1;
 }
 
 .card-header {
@@ -216,6 +229,32 @@ tr:last-child td {
     margin-right: 8px;
 }
 
+.btn-home {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 40px;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 15px;
+    min-width: 200px;
+    min-height: 120px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    transition: all 0.3s ease;
+}
+
+.btn-home:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+.btn-home i {
+    font-size: 32px;
+    margin-bottom: 15px;
+    display: block;
+}
+
 .btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -228,6 +267,16 @@ tr:last-child td {
     text-decoration: none;
 }
 
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #545b62;
+    transform: translateY(-1px);
+}
+
 .btn-success {
     background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
     color: white;
@@ -236,18 +285,6 @@ tr:last-child td {
 .btn-success:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(86, 171, 47, 0.4);
-    color: white;
-    text-decoration: none;
-}
-
-.btn-danger {
-    background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
-    color: white;
-}
-
-.btn-danger:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
     color: white;
     text-decoration: none;
 }
@@ -264,7 +301,34 @@ tr:last-child td {
     text-decoration: none;
 }
 
+.btn-danger {
+    background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+    color: white;
+}
+
+.btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 65, 108, 0.4);
+    color: white;
+    text-decoration: none;
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+    transform: translateY(-1px);
+}
+
 /* 表单样式 */
+.form-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
 .form-group {
     margin-bottom: 20px;
 }
@@ -299,6 +363,22 @@ tr:last-child td {
 
 .form-control::placeholder {
     color: #999;
+}
+
+.form-control[readonly] {
+    background-color: #f8f9fa;
+    cursor: not-allowed;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.form-actions .btn {
+    margin: 0 10px;
 }
 
 /* 网格布局 */
@@ -338,58 +418,49 @@ tr:last-child td {
     opacity: 0.9;
 }
 
-/* 响应式设计 */
-@media (max-width: 768px) {
-    .sidebar {
-        transform: translateX(-100%);
-    }
-    
-    .sidebar.open {
-        transform: translateX(0);
-    }
-    
-    .main-content {
-        margin-left: 0;
-        padding: 20px;
-    }
-    
-    .content-header {
-        padding: 20px;
-    }
-    
-    .content-header h1 {
-        font-size: 24px;
-    }
-    
-    .card-body {
-        padding: 20px;
-    }
-    
-    .btn {
-        display: block;
-        width: 100%;
-        margin: 5px 0;
-    }
-    
-    .grid {
-        grid-template-columns: 1fr;
-    }
+/* 汉堡菜单按钮 */
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 8px;
+    padding: 12px;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
 }
 
-/* 动画效果 */
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.menu-toggle:hover {
+    background: white;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
-.fade-in {
+.menu-toggle i {
+    font-size: 20px;
+    color: #667eea;
+}
+
+/* 遮罩层 */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
     opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    display: block;
 }
 
 /* 加载动画 */
@@ -450,25 +521,181 @@ tr:last-child td {
     opacity: 1;
 }
 
-/* 滚动条样式 */
-.sidebar::-webkit-scrollbar {
-    width: 6px;
+/* 面包屑导航样式 */
+.breadcrumb {
+    background: #f8f9fa;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    font-size: 14px;
 }
 
-.sidebar::-webkit-scrollbar-track {
-    background: #f1f1f1;
+.breadcrumb a {
+    color: #6c757d;
+    text-decoration: none;
+    transition: color 0.3s;
 }
 
-.sidebar::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
+.breadcrumb a:hover {
+    color: #007bff;
 }
 
-.sidebar::-webkit-scrollbar-thumb:hover {
-    background: #a8a8a8;
+.breadcrumb .separator {
+    margin: 0 8px;
+    color: #6c757d;
 }
 
-/* 确保所有链接样式正确 */
+/* 分页组件样式 */
+.pagination-container {
+    margin-top: 30px;
+    text-align: center;
+}
+
+.pagination-info {
+    margin-bottom: 15px;
+    color: #666;
+    font-size: 14px;
+}
+
+.pagination-info strong {
+    color: #333;
+    font-weight: 600;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.page-link {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    text-decoration: none;
+    color: #666;
+    background: #fff;
+    transition: all 0.3s ease;
+    font-size: 14px;
+    min-width: 40px;
+    justify-content: center;
+}
+
+.page-link:hover {
+    background: #f8f9fa;
+    border-color: #007bff;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.page-link.active {
+    background: #007bff;
+    border-color: #007bff;
+    color: #fff;
+}
+
+.page-link.active a {
+    color: #fff;
+}
+
+.page-link a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.page-link a:hover {
+    text-decoration: none;
+}
+
+/* 试卷样式 */
+.exam-paper {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.exam-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #333;
+}
+
+.problems-container {
+    margin-top: 20px;
+}
+
+.problem-item {
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #eee;
+}
+
+.problem-number {
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-right: 10px;
+}
+
+.problem-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.problem-content {
+    margin-bottom: 15px;
+    line-height: 1.6;
+    font-size: 1.05em;
+}
+
+.answer-toggle {
+    color: #007bff;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.answer-toggle i {
+    margin-right: 5px;
+}
+
+.problem-answer {
+    background-color: #f8f9fa;
+    padding: 15px;
+    border-radius: 5px;
+    border-left: 4px solid #28a745;
+}
+
+/* 错题标记按钮样式 */
+.star-toggle {
+    color: #6c757d;
+    padding: 0.25rem 0.4rem;
+}
+
+.star-toggle:hover {
+    color: #ffc107;
+}
+
+.star-toggle.text-warning {
+    color: #ffc107;
+}
+
+/* 动画控制 */
+.fade-in.animated {
+    opacity: 1;
+    transform: translateY(0);
+    animation: none;
+}
+
+/* 通用链接样式 */
 a {
     color: inherit;
     text-decoration: none;
@@ -478,7 +705,7 @@ a:hover {
     text-decoration: none;
 }
 
-/* 确保按钮在表单中正确显示 */
+/* 提交按钮样式 */
 button[type="submit"] {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
@@ -494,4 +721,93 @@ button[type="submit"] {
 button[type="submit"]:hover {
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-} 
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .menu-toggle {
+        display: block;
+    }
+    
+    .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+        padding-top: 80px;
+    }
+    
+    .content-header {
+        padding: 20px;
+    }
+    
+    .content-header h1 {
+        font-size: 24px;
+    }
+    
+    .card-body {
+        padding: 20px;
+    }
+    
+    .btn {
+        display: block;
+        width: 100%;
+        margin: 5px 0;
+    }
+    
+    .btn-home {
+        min-width: 150px;
+        min-height: 100px;
+        padding: 20px 30px;
+        font-size: 16px;
+    }
+    
+    .btn-home i {
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    
+    .grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .pagination {
+        gap: 3px;
+    }
+    
+    .page-link {
+        padding: 6px 8px;
+        font-size: 12px;
+        min-width: 35px;
+    }
+    
+    .pagination-info {
+        font-size: 12px;
+    }
+
+    .form-container {
+        padding: 0 15px;
+    }
+
+    .form-actions .btn {
+        display: block;
+        width: 100%;
+        margin: 5px 0;
+    }
+
+    .problem-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .problem-actions {
+        margin-top: 10px;
+    }
+}

@@ -19,6 +19,10 @@
                 <a th:href="@{'/problem/manage/add?tagId=' + ${tag.id} + '&subjectId=' + ${subject.id}}" class="btn btn-success">
                     <i class="fas fa-plus"></i> 添加题目
                 </a>
+                <!-- 新增：导出错题按钮 -->
+                <button class="btn btn-danger" data-toggle="modal" data-target="#exportModal">
+                    <i class="fas fa-file-export"></i> 导出错题
+                </button>
                 <a th:href="@{'/tag/list?subjectId=' + ${subject.id}}" class="btn btn-secondary">
                     <i class="fas fa-arrow-left"></i> 返回知识点列表
                 </a>
@@ -35,11 +39,16 @@
                     <div th:each="problem, iterStat : ${problems}" class="problem-item">
                         <div class="problem-header">
                             <span class="problem-number">第 [[${iterStat.index + 1}]] 题</span>
+                            <!-- 错题标记按钮 -->
+                            <button class="btn btn-sm btn-link star-toggle" th:data-problem-id="${problem.id}">
+                                <i class="far fa-star"></i> 
+                                <span>标记</span>
+                            </button>
                             <div class="problem-actions">
                                 <a th:href="@{'/problem/manage/edit/' + ${problem.id} + '?tagId=' + ${tag.id} + '&subjectId=' + ${subject.id}}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
-                                <a th:href="@{'/problem/manage/delete/' + ${problem.id} + '?tagId=' + ${tag.id} + '&subjectId=' + ${subject.id}}" 
+                                <a th:href="@{'/problem/manage/delete/' + ${problem.id} + '?tagId=' + ${tag.id} + '&subjectId=' + ${subject.id}}"
                                    onclick="return confirm('确定要删除这道题吗？')" class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash"></i> 删除
                                 </a>
@@ -160,6 +169,143 @@
             observer.observe(el, { attributes: true, attributeFilter: ['style'] });
         });
     });
+    
+    // 页面加载完成后初始化
+    document.addEventListener('DOMContentLoaded', function() {
+        // 加载已标记的题目
+        loadMarkedProblems();
+        
+        // 初始化错题标记功能
+        initProblemCollection();
+        
+        // 确认导出按钮点击事件
+        document.getElementById('confirmExport').addEventListener('click', function() {
+            const collectionId = document.getElementById('collectionSelect').value;
+            if (!collectionId) {
+                alert('请选择错题集');
+                return;
+            }
+            
+            if (markedProblems.size === 0) {
+                alert('请先标记错题');
+                return;
+            }
+            
+            const tagId = '[[${tag.id}]]';
+            exportProblems(collectionId, tagId);
+        });
+    });
+    
+    // 初始化错题标记功能
+    function initProblemCollection() {
+        // 绑定标记按钮点击事件
+        document.querySelectorAll('.star-toggle').forEach(btn => {
+            const problemId = btn.getAttribute('data-problem-id');
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('span');
+            
+            // 根据本地存储设置初始状态
+            if (markedProblems.has(problemId)) {
+                icon.classList.remove('far');
+                icon.classList.add('fas', 'text-warning');
+                text.textContent = '已标记';
+                btn.setAttribute('data-is-marked', 'true');
+            }
+            
+            // 点击切换标记状态
+            btn.addEventListener('click', function() {
+                toggleProblemCollection(problemId, icon, text, btn);
+            });
+        });
+    }
+    
+    // 页面加载时初始化标记状态
+    let markedProblems = new Set();
+    
+    // 从localStorage加载已标记的题目
+    function loadMarkedProblems() {
+        const saved = localStorage.getItem('markedProblems');
+        if (saved) {
+            markedProblems = new Set(JSON.parse(saved));
+        }
+    }
+    
+    // 保存标记状态到localStorage
+    function saveMarkedProblems() {
+        localStorage.setItem('markedProblems', JSON.stringify([...markedProblems]));
+    }
+    
+    // 切换题目标记状态
+    function toggleProblemCollection(problemId, icon, text, btn) {
+        const isMarked = markedProblems.has(problemId.toString());
+        
+        if (!isMarked) {
+            // 标记题目
+            markProblem(problemId, icon, text, btn);
+        } else {
+            // 取消标记
+            unmarkProblem(problemId, icon, text, btn);
+        }
+    }
+    
+    // 标记错题（仅前端存储）
+    function markProblem(problemId, icon, text, btn) {
+        markedProblems.add(problemId.toString());
+        saveMarkedProblems();
+        
+        icon.classList.remove('far');
+        icon.classList.add('fas', 'text-warning');
+        text.textContent = '已标记';
+        btn.setAttribute('data-is-marked', 'true');
+    }
+    
+    // 取消标记错题（仅前端存储）
+    function unmarkProblem(problemId, icon, text, btn) {
+        markedProblems.delete(problemId.toString());
+        saveMarkedProblems();
+        
+        icon.classList.remove('fas', 'text-warning');
+        icon.classList.add('far');
+        text.textContent = '标记';
+        btn.setAttribute('data-is-marked', 'false');
+    }
+    
+    // 导出错题
+    function exportProblems(collectionId, tagId) {
+        // 将本地标记的题目ID转换为数组
+        const problemIds = Array.from(markedProblems);
+        
+        fetch('/problem/export-marked', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                collectionId: collectionId,
+                problemIds: problemIds
+            })
+        })
+        .then(response => response.text())
+        .then(result => {
+            if (result === 'success') {
+                alert('错题导出成功！');
+                // 清空本地标记
+                markedProblems.clear();
+                saveMarkedProblems();
+                // 刷新页面显示
+                location.reload();
+                $('#exportModal').modal('hide');
+            } else {
+                alert('导出失败，请重试');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('导出失败，请重试');
+        });
+    }
+    
+
 </script>
 
 <style>
@@ -211,5 +357,35 @@
         line-height: 1.6;
     }
 </style>
+<!-- 导出错题模态框 -->
+<div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">导出错题</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="collectionSelect">选择错题集</label>
+                    <select class="form-control" id="collectionSelect">
+                        <option value="">请选择错题集</option>
+                        <option th:each="collection : ${collections}" th:value="${collection.id}" th:text="${collection.name}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>导出说明</label>
+                    <p class="text-muted">将当前知识点下的所有错题导出到选定的错题集中</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmExport">导出</button>
+            </div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -9,51 +9,59 @@
 <div class="main-content">
     <div class="content-header">
         <h1><i class="fas fa-bookmark"></i> 错题集管理</h1>
+        <p>管理您的错题集，组织错题练习</p>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h3><i class="fas fa-list"></i> 错题集列表</h3>
-            <div style="float: right;">
-                <a href="/collection/form" class="btn btn-success">
-                    <i class="fas fa-plus"></i> 新增错题集
-                </a>
-            </div>
+            <h3><i class="fas fa-bookmark"></i> 错题集管理</h3>
+            <!-- 添加消息提示 -->
+            <div th:if="${message != null}" class="alert alert-success" th:text="${message}"></div>
+            <div th:if="${error != null}" class="alert alert-danger" th:text="${error}"></div>
         </div>
         <div class="card-body">
-            <table class="table table-striped">
-                <thead>
+            <div class="table-container">
+                <table>
+                    <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>名称</th>
-                        <th>创建时间</th>
-                        <th>操作</th>
+                        <th><i class="fas fa-hashtag"></i> ID</th>
+                        <th><i class="fas fa-bookmark"></i> 错题集名称</th>
+                        <th><i class="fas fa-cogs"></i> 操作</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     <tr th:each="collection : ${collections}">
                         <td th:text="${collection.id}"></td>
+                        <td th:text="${collection.name}"></td>
                         <td>
-                            <a th:href="@{'/collection/problem/list/' + ${collection.id}}" th:text="${collection.name}"></a>
-                        </td>
-                        <td th:text="${#dates.format(collection.createTime, 'yyyy-MM-dd HH:mm')}"></td>
-                        <td>
-                            <a th:href="@{'/collection/edit/' + ${collection.id}}" class="btn btn-sm btn-warning">
+                            <a th:href="@{'/collection/view/' + ${collection.id}}" class="btn btn-info">
+                                <i class="fas fa-eye"></i> 查看题目
+                            </a>
+                            <a th:href="@{'/collection/edit/' + ${collection.id}}" class="btn btn-warning">
                                 <i class="fas fa-edit"></i> 编辑
                             </a>
-                            <a th:href="@{'/collection/delete/' + ${collection.id}}" onclick="return confirm('确定要删除这个错题集吗？')" class="btn btn-sm btn-danger">
+                            <a th:href="@{'/collection/delete/' + ${collection.id}}"
+                               onclick="return confirm('确定要删除这个错题集吗？')"
+                               class="btn btn-danger">
                                 <i class="fas fa-trash"></i> 删除
                             </a>
                         </td>
                     </tr>
                     <tr th:if="${#lists.isEmpty(collections)}">
-                        <td colspan="4" class="text-center empty-state">
-                            <i class="fas fa-question-circle"></i>
-                            <span>暂无错题集数据，请先创建错题集</span>
-                        </td>
+                        <td th:replace="~{fragments/layout :: empty-state('暂无错题集数据，请先创建错题集', 'bookmark')}" colspan="3"></td>
                     </tr>
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 30px; text-align: center;">
+                <a th:href="@{/collection/add}" class="btn btn-success">
+                    <i class="fas fa-plus"></i> 新增错题集
+                </a>
+            </div>
+
+            <!-- 分页组件 -->
+            <div th:replace="~{fragments/layout :: pagination(${pageResult}, '/collection/list')}"></div>
         </div>
     </div>
 </div>

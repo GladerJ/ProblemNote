@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head(${subject != null ? '编辑科目' : '新增科目'})}"></head>
+<body>
+<!-- 侧边栏 -->
+<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+<!-- 主内容区域 -->
+<div class="main-content">
+    <div class="content-header">
+        <h1><i class="fas fa-graduation-cap"></i> <span th:text="${subject != null ? '编辑' : '新增'}">新增</span>科目</h1>
+        <p>管理您的学习科目，组织题目笔记</p>
+    </div>
+
+    <!-- 面包屑导航 -->
+    <div class="breadcrumb">
+        <a href="/subject/list"><i class="fas fa-list"></i> 科目管理</a>
+        <span class="separator">/</span>
+        <span th:text="${subject != null ? '编辑科目' : '新增科目'}">新增科目</span>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h3><i class="fas fa-edit"></i> <span th:text="${subject != null ? '编辑' : '新增'}">新增</span>科目</h3>
+        </div>
+        <div class="card-body">
+            <form th:action="${subject != null ? '/subject/edit' : '/subject/add'}" method="post" class="form-container">
+                <input type="hidden" name="id" th:value="${subject != null ? subject.id : ''}">
+
+                <div class="form-group">
+                    <label class="form-label">
+                        <i class="fas fa-book"></i> 科目名称
+                    </label>
+                    <input type="text"
+                           name="name"
+                           class="form-control"
+                           placeholder="请输入科目名称"
+                           th:value="${subject != null ? subject.name : ''}"
+                           required
+                           maxlength="50">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> 保存
+                    </button>
+                    <a href="/subject/list" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> 返回
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- 公共脚本 + 页面特定脚本 -->
+<script th:replace="~{fragments/layout :: sidebar-script}"></script>
+<script>
+    // 页面特定逻辑
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('科目表单页面加载完成');
+
+        // 自动聚焦到名称输入框
+        const nameInput = document.querySelector('input[name="name"]');
+        if (nameInput) {
+            nameInput.focus();
+        }
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录 - 题目笔记系统</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .login-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-header {
+            margin-bottom: 30px;
+        }
+
+        .login-header i {
+            font-size: 48px;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .login-header h2 {
+            color: #333;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .error-message {
+            background: #ff6b6b;
+            color: white;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        /* 表单组样式调整 */
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left; /* 左对齐 */
+        }
+
+        .form-label {
+            display: inline-block;
+            width: 80px; /* 固定标签宽度 */
+            color: #333;
+            font-weight: 500;
+            margin-bottom: 5px;
+            vertical-align: top;
+            padding-top: 8px; /* 与输入框对齐 */
+        }
+
+        .form-control {
+            display: inline-block;
+            width: calc(100% - 90px); /* 剩余宽度给输入框 */
+            padding: 10px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .captcha-container {
+            display: inline-block;
+            width: calc(100% - 90px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .captcha-input {
+            flex: 1;
+            max-width: 120px;
+            padding: 10px 15px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        .captcha-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .captcha-image {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+            height: 40px;
+        }
+
+        .captcha-image:hover {
+            opacity: 0.8;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* 删除整个fade-in类定义 */
+        /* .fade-in {
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        } */
+    </style>
+</head>
+<body>
+<div class="login-container">
+    <!-- 移除fade-in类，修复窗口不显示问题 -->
+    <div class="login-card">
+        <div class="login-header">
+            <i class="fas fa-book-open"></i>
+            <h2>题目笔记系统</h2>
+            <p>请登录您的账户</p>
+        </div>
+
+        <div th:if="${error}" class="error-message">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span th:text="${error}"></span>
+        </div>
+
+        <form th:action="@{/login}" method="post">
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-user"></i> 用户名
+                </label>
+                <input type="text"
+                       name="username"
+                       class="form-control"
+                       placeholder="请输入用户名"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-lock"></i> 密码
+                </label>
+                <input type="password"
+                       name="password"
+                       class="form-control"
+                       placeholder="请输入密码"
+                       required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    <i class="fas fa-shield-alt"></i> 验证码
+                </label>
+                <div class="captcha-container">
+                    <input type="text"
+                           name="captcha"
+                           class="captcha-input"
+                           placeholder="请输入验证码"
+                           maxlength="4"
+                           required>
+                    <img src="/captcha"
+                         alt="验证码"
+                         class="captcha-image"
+                         id="captchaImage"
+                         onclick="refreshCaptcha()"
+                         title="点击刷新验证码">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;">
+                <i class="fas fa-sign-in-alt"></i> 登录
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    // 页面加载完成后的处理
+    document.addEventListener('DOMContentLoaded', function() {
+        // 删除动画相关代码
+        // const elements = document.querySelectorAll('.fade-in');
+        // elements.forEach((el, index) => {
+        //     setTimeout(() => {
+        //         el.style.opacity = '1';
+        //     }, index * 100);
+        // });
+
+        // 验证码输入框处理
+        const captchaInput = document.querySelector('.captcha-input');
+        if (captchaInput) {
+            captchaInput.addEventListener('input', function() {
+                // 只允许输入数字
+                this.value = this.value.replace(/[^0-9]/g, '');
+            });
+        }
+    });
+
+    // 刷新验证码
+    function refreshCaptcha() {
+        const captchaImage = document.getElementById('captchaImage');
+        if (captchaImage) {
+            // 添加时间戳防止缓存
+            captchaImage.src = '/captcha?' + new Date().getTime();
+        }
+    }
+</script>
+</body>
+</html>
