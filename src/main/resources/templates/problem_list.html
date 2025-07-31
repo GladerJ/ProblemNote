@@ -9,14 +9,14 @@
 <div class="main-content">
     <div class="content-header">
         <h1><i class="fas fa-clipboard-list"></i> 题目列表</h1>
-        <p>知识点: <span th:text="${tag.name}"></span> - 科目: <span th:text="${subject.name}"></span></p>
+        <p>知识点: <span th:text="${tag != null ? tag.name : ''}"></span> - 科目: <span th:text="${subject != null ? subject.name : ''}"></span></p>
     </div>
 
     <div class="card">
         <div class="card-header">
             <h3><i class="fas fa-file-alt"></i> 试卷预览</h3>
             <div style="float: right;">
-                <a th:href="@{/problem/manage/add(tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum}, pageSize=${pageResult.pageSize})}" class="btn btn-success">
+                <a th:href="@{/problem/manage/add(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult != null ? pageResult.pageNum : 1}, pageSize=${pageResult != null ? pageResult.pageSize : 10})}" class="btn btn-success">
                     <i class="fas fa-plus"></i> 添加题目
                 </a>
                 <!-- 新增：导出错题按钮 -->
@@ -27,51 +27,54 @@
                 <button class="btn btn-warning" onclick="clearAllMarks()">
                     <i class="fas fa-trash"></i> 清除标记
                 </button>
-                <a th:href="@{'/tag/list?subjectId=' + ${subject.id}}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> 返回知识点列表
+                <a th:href="@{/tag/list(subjectId=${subject != null ? subject.id : 0})}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> 返回知识点列表
                 </a>
             </div>
         </div>
         <div class="card-body">
             <div class="exam-paper">
                 <div class="exam-header">
-                    <h2 th:text="${subject.name + ' - ' + tag.name + ' 练习题'}"></h2>
+                    <h2 th:text="${(subject != null ? subject.name : '') + ' - ' + (tag != null ? tag.name : '') + ' 练习题'}"></h2>
                     <p>共 <span th:text="${pageResult.total}"></span> 道题，当前第 <span th:text="${pageResult.pageNum}"></span> 页，共 <span th:text="${pageResult.pages}"></span> 页</p>
                 </div>
-                
+
                 <div class="problems-container">
                     <div th:each="problem, iterStat : ${problems}" class="problem-item">
                         <div class="problem-header">
                             <span class="problem-number">第 [[${(pageResult.pageNum - 1) * pageResult.pageSize + iterStat.index + 1}]] 题</span>
                             <!-- 错题标记按钮 -->
                             <button class="btn btn-sm btn-link star-toggle" th:data-problem-id="${problem.id}">
-                                <i class="far fa-star"></i> 
+                                <i class="far fa-star"></i>
                                 <span>标记</span>
                             </button>
                             <div class="problem-actions">
-                                <a th:href="@{/problem/manage/edit/{id}(id=${problem.id}, tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum}, pageSize=${pageResult.pageSize})}" class="btn btn-sm btn-warning">
+                                <a th:href="@{/problem/manage/edit/{id}(id=${problem.id}, tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult != null ? pageResult.pageNum : 1}, pageSize=${pageResult != null ? pageResult.pageSize : 10})}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
-                                <a th:href="@{/problem/manage/delete/{id}(id=${problem.id}, tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum}, pageSize=${pageResult.pageSize})}"
+                                <a th:href="@{/problem/manage/delete/{id}(id=${problem.id}, tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult != null ? pageResult.pageNum : 1}, pageSize=${pageResult != null ? pageResult.pageSize : 10})}"
                                    onclick="return confirm('确定要删除这道题吗？')" class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash"></i> 删除
                                 </a>
                             </div>
                         </div>
-                        <div class="problem-content" th:utext="${problem.content}"></div>
+                        <!-- 修改：使用data属性存储原始内容 -->
+                        <div class="problem-content" th:data-raw-content="${problem.content}" th:utext="${problem.content}"></div>
                         <div class="answer-toggle" th:onclick="'toggleAnswer(' + ${problem.id} + ')'">
-                            <i class="fas fa-chevron-down"></i> 
+                            <i class="fas fa-chevron-down"></i>
                             <span class="toggle-text">查看答案</span>
                         </div>
-                        <div class="problem-answer" th:id="'answer-' + ${problem.id}" style="display: none;" th:utext="${problem.answer}"></div>
+                        <!-- 修改：使用data属性存储原始内容 -->
+                        <div class="problem-answer" th:id="'answer-' + ${problem.id}" style="display: none;"
+                             th:data-raw-content="${problem.answer}" th:utext="${problem.answer}"></div>
                     </div>
-                    
+
                     <div th:if="${#lists.isEmpty(problems)}" class="empty-state">
                         <i class="fas fa-question-circle"></i>
                         <span>暂无题目数据，请先添加题目</span>
                     </div>
                 </div>
-                
+
                 <!-- 分页组件 -->
                 <div th:if="${pageResult != null && pageResult.total > 0}" class="pagination-container">
                     <div class="pagination-info">
@@ -81,7 +84,7 @@
                     </div>
                     <div class="pagination">
                         <a th:if="${pageResult.hasPreviousPage}"
-                           th:href="@{/problem/list(tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum - 1}, pageSize=${pageResult.pageSize})}"
+                           th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult.pageNum - 1}, pageSize=${pageResult.pageSize})}"
                            class="page-link">
                             <i class="fas fa-chevron-left"></i> 上一页
                         </a>
@@ -90,12 +93,12 @@
                               th:if="${pageNum >= pageResult.pageNum - 2 && pageNum <= pageResult.pageNum + 2}"
                               class="page-link"
                               th:classappend="${pageNum == pageResult.pageNum} ? 'active' : ''">
-                            <a th:href="@{/problem/list(tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageNum}, pageSize=${pageResult.pageSize})}"
+                            <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageNum}, pageSize=${pageResult.pageSize})}"
                                th:text="${pageNum}">1</a>
                         </span>
 
                         <a th:if="${pageResult.hasNextPage}"
-                           th:href="@{/problem/list(tagId=${tag.id}, subjectId=${subject.id}, pageNum=${pageResult.pageNum + 1}, pageSize=${pageResult.pageSize})}"
+                           th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult.pageNum + 1}, pageSize=${pageResult.pageSize})}"
                            class="page-link">
                             下一页 <i class="fas fa-chevron-right"></i>
                         </a>
@@ -119,7 +122,7 @@
         const toggleElement = document.querySelector(`[onclick="toggleAnswer(${problemId})"]`);
         const iconElement = toggleElement.querySelector('i');
         const textElement = toggleElement.querySelector('.toggle-text');
-        
+
         if (answerElement.style.display === 'none' || answerElement.style.display === '') {
             // 显示答案
             answerElement.style.display = 'block';
@@ -134,11 +137,18 @@
             textElement.textContent = '查看答案';
         }
     }
-    
+
+    // 修复HTML实体的函数
+    function decodeHtmlEntities(text) {
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = text;
+        return textarea.value;
+    }
+
     // 页面加载完成后渲染LaTeX公式
     document.addEventListener('DOMContentLoaded', function() {
         console.log('题目列表页面加载完成');
-        
+
         // 渲染所有LaTeX公式
         function renderLatex() {
             document.querySelectorAll('.problem-content, .problem-answer').forEach(el => {
@@ -146,43 +156,81 @@
                 if (el.dataset.latexRendered) {
                     return;
                 }
-                
-                let content = el.innerHTML;
-                
+
+                // 获取原始内容并解码HTML实体
+                let content = el.dataset.rawContent || el.innerHTML;
+                content = decodeHtmlEntities(content);
+
+                console.log('Processing content:', content.substring(0, 100)); // 调试日志
+
                 // 处理块级公式 $$...$$
                 content = content.replace(/\$\$([\s\S]*?)\$\$/g, function(match, formula) {
                     try {
+                        console.log('Rendering block formula:', formula.trim()); // 调试日志
                         return katex.renderToString(formula.trim(), {
                             throwOnError: false,
-                            displayMode: true  // 块级公式
+                            displayMode: true,  // 块级公式
+                            strict: false
                         });
                     } catch (e) {
-                        console.warn('LaTeX渲染错误:', e);
+                        console.warn('LaTeX块级公式渲染错误:', e, 'Formula:', formula);
                         return match; // 返回原始内容
                     }
                 });
-                
-                // 处理行内公式 $...$
-                content = content.replace(/\$(.*?)\$/g, function(match, formula) {
+
+                // 处理行内公式 $...$（避免与块级公式冲突）
+                content = content.replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, function(match, formula) {
                     try {
+                        console.log('Rendering inline formula:', formula.trim()); // 调试日志
                         return katex.renderToString(formula.trim(), {
                             throwOnError: false,
-                            displayMode: false  // 行内公式
+                            displayMode: false,  // 行内公式
+                            strict: false
                         });
                     } catch (e) {
-                        console.warn('LaTeX渲染错误:', e);
+                        console.warn('LaTeX行内公式渲染错误:', e, 'Formula:', formula);
                         return match; // 返回原始内容
                     }
                 });
-                
+
+                // 处理 \[...\] 块级公式
+                content = content.replace(/\\\[([\s\S]*?)\\\]/g, function(match, formula) {
+                    try {
+                        console.log('Rendering bracket block formula:', formula.trim());
+                        return katex.renderToString(formula.trim(), {
+                            throwOnError: false,
+                            displayMode: true,
+                            strict: false
+                        });
+                    } catch (e) {
+                        console.warn('LaTeX bracket块级公式渲染错误:', e, 'Formula:', formula);
+                        return match;
+                    }
+                });
+
+                // 处理 \(...\) 行内公式
+                content = content.replace(/\\\((.*?)\\\)/g, function(match, formula) {
+                    try {
+                        console.log('Rendering bracket inline formula:', formula.trim());
+                        return katex.renderToString(formula.trim(), {
+                            throwOnError: false,
+                            displayMode: false,
+                            strict: false
+                        });
+                    } catch (e) {
+                        console.warn('LaTeX bracket行内公式渲染错误:', e, 'Formula:', formula);
+                        return match;
+                    }
+                });
+
                 el.innerHTML = content;
                 el.dataset.latexRendered = 'true'; // 标记为已处理
             });
         }
-        
+
         // 初始渲染
         renderLatex();
-        
+
         // 监听答案显示事件，对新显示的内容进行LaTeX渲染
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
@@ -197,21 +245,21 @@
                 }
             });
         });
-        
+
         // 观察所有答案元素的样式变化
         document.querySelectorAll('.problem-answer').forEach(el => {
             observer.observe(el, { attributes: true, attributeFilter: ['style'] });
         });
     });
-    
+
     // 页面加载完成后初始化
     document.addEventListener('DOMContentLoaded', function() {
         // 加载已标记的题目
         loadMarkedProblems();
-        
+
         // 初始化错题标记功能
         initProblemCollection();
-        
+
         // 确认导出按钮点击事件
         document.getElementById('confirmExport').addEventListener('click', function() {
             const collectionId = document.getElementById('collectionSelect').value;
@@ -219,17 +267,17 @@
                 alert('请选择错题集');
                 return;
             }
-            
+
             if (markedProblems.size === 0) {
                 alert('请先标记错题');
                 return;
             }
-            
-            const tagId = '[[${tag.id}]]';
+
+            const tagId = '[[${tag != null ? tag.id : 0}]]';
             exportProblems(collectionId, tagId);
         });
     });
-    
+
     // 初始化错题标记功能
     function initProblemCollection() {
         // 绑定标记按钮点击事件
@@ -237,7 +285,7 @@
             const problemId = btn.getAttribute('data-problem-id');
             const icon = btn.querySelector('i');
             const text = btn.querySelector('span');
-            
+
             // 根据本地存储设置初始状态
             if (markedProblems.has(problemId)) {
                 icon.classList.remove('far');
@@ -245,17 +293,17 @@
                 text.textContent = '已标记';
                 btn.setAttribute('data-is-marked', 'true');
             }
-            
+
             // 点击切换标记状态
             btn.addEventListener('click', function() {
                 toggleProblemCollection(problemId, icon, text, btn);
             });
         });
     }
-    
+
     // 页面加载时初始化标记状态
     let markedProblems = new Set();
-    
+
     // 从localStorage加载已标记的题目
     function loadMarkedProblems() {
         const saved = localStorage.getItem('markedProblems');
@@ -263,16 +311,16 @@
             markedProblems = new Set(JSON.parse(saved));
         }
     }
-    
+
     // 保存标记状态到localStorage
     function saveMarkedProblems() {
         localStorage.setItem('markedProblems', JSON.stringify([...markedProblems]));
     }
-    
+
     // 切换题目标记状态
     function toggleProblemCollection(problemId, icon, text, btn) {
         const isMarked = markedProblems.has(problemId.toString());
-        
+
         if (!isMarked) {
             // 标记题目
             markProblem(problemId, icon, text, btn);
@@ -281,34 +329,34 @@
             unmarkProblem(problemId, icon, text, btn);
         }
     }
-    
+
     // 标记错题（仅前端存储）
     function markProblem(problemId, icon, text, btn) {
         markedProblems.add(problemId.toString());
         saveMarkedProblems();
-        
+
         icon.classList.remove('far');
         icon.classList.add('fas', 'text-warning');
         text.textContent = '已标记';
         btn.setAttribute('data-is-marked', 'true');
     }
-    
+
     // 取消标记错题（仅前端存储）
     function unmarkProblem(problemId, icon, text, btn) {
         markedProblems.delete(problemId.toString());
         saveMarkedProblems();
-        
+
         icon.classList.remove('fas', 'text-warning');
         icon.classList.add('far');
         text.textContent = '标记';
         btn.setAttribute('data-is-marked', 'false');
     }
-    
+
     // 导出错题
     function exportProblems(collectionId, tagId) {
         // 将本地标记的题目ID转换为数组
         const problemIds = Array.from(markedProblems);
-        
+
         fetch('/problem/export-marked', {
             method: 'POST',
             headers: {
@@ -319,55 +367,51 @@
                 problemIds: problemIds
             })
         })
-        .then(response => response.text())
-        .then(result => {
-            if (result === 'success') {
-                alert('错题导出成功！');
-                // 清空本地标记
-                markedProblems.clear();
-                saveMarkedProblems();
-                // 刷新页面显示
-                location.reload();
-                $('#exportModal').modal('hide');
-            } else {
+            .then(response => response.text())
+            .then(result => {
+                if (result === 'success') {
+                    alert('错题导出成功！');
+                    // 清空本地标记
+                    markedProblems.clear();
+                    saveMarkedProblems();
+                    // 刷新页面显示
+                    location.reload();
+                    $('#exportModal').modal('hide');
+                } else {
+                    alert('导出失败，请重试');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
                 alert('导出失败，请重试');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('导出失败，请重试');
-        });
+            });
     }
-    
 
-    
     // 清除所有标记
     function clearAllMarks() {
         if (markedProblems.size === 0) {
             alert('当前没有标记的题目');
             return;
         }
-        
+
         if (confirm('确定要清除所有标记吗？此操作不可恢复。')) {
             markedProblems.clear();
             saveMarkedProblems();
-            
+
             // 重置所有标记按钮的状态
             document.querySelectorAll('.star-toggle').forEach(btn => {
                 const icon = btn.querySelector('i');
                 const text = btn.querySelector('span');
-                
+
                 icon.classList.remove('fas', 'text-warning');
                 icon.classList.add('far');
                 text.textContent = '标记';
                 btn.setAttribute('data-is-marked', 'false');
             });
-            
+
             alert('已清除所有标记');
         }
     }
-    
-
 </script>
 
 <style>
@@ -378,12 +422,12 @@
         padding: 5px 0;
         user-select: none; /* 防止文本选择 */
     }
-    
+
     .answer-toggle:hover {
         color: #0056b3;
         text-decoration: underline;
     }
-    
+
     .problem-answer {
         margin-top: 10px;
         padding: 15px;
@@ -391,7 +435,7 @@
         border-left: 4px solid #28a745;
         border-radius: 4px;
     }
-    
+
     .problem-item {
         margin-bottom: 30px;
         padding: 20px;
@@ -399,7 +443,7 @@
         border-radius: 8px;
         background-color: #fff;
     }
-    
+
     .problem-header {
         display: flex;
         justify-content: space-between;
@@ -408,12 +452,12 @@
         padding-bottom: 10px;
         border-bottom: 1px solid #e9ecef;
     }
-    
+
     .problem-number {
         font-weight: bold;
         color: #495057;
     }
-    
+
     .problem-content {
         margin-bottom: 15px;
         line-height: 1.6;

@@ -30,7 +30,7 @@
                     <h2 th:text="${collection.name + ' 错题集'}"></h2>
                     <p>共 <span th:text="${pageResult.total}"></span> 道错题，当前第 <span th:text="${pageResult.pageNum}"></span> 页，共 <span th:text="${pageResult.pages}"></span> 页</p>
                 </div>
-                
+
                 <div class="problems-container">
                     <div th:each="problem, iterStat : ${problems}" class="problem-item">
                         <div class="problem-header">
@@ -41,20 +41,23 @@
                                 </button>
                             </div>
                         </div>
-                        <div class="problem-content" th:utext="${problem.content}"></div>
+                        <!-- 修改：使用data属性存储原始内容 -->
+                        <div class="problem-content" th:data-raw-content="${problem.content}" th:utext="${problem.content}"></div>
                         <div class="answer-toggle" th:onclick="'toggleAnswer(' + ${problem.id} + ')'">
-                            <i class="fas fa-chevron-down"></i> 
+                            <i class="fas fa-chevron-down"></i>
                             <span class="toggle-text">查看答案</span>
                         </div>
-                        <div class="problem-answer" th:id="'answer-' + ${problem.id}" style="display: none;" th:utext="${problem.answer}"></div>
+                        <!-- 修改：使用data属性存储原始内容 -->
+                        <div class="problem-answer" th:id="'answer-' + ${problem.id}" style="display: none;"
+                             th:data-raw-content="${problem.answer}" th:utext="${problem.answer}"></div>
                     </div>
-                    
+
                     <div th:if="${#lists.isEmpty(problems)}" class="empty-state">
                         <i class="fas fa-question-circle"></i>
                         <span>暂无错题，请先添加错题</span>
                     </div>
                 </div>
-                
+
                 <!-- 分页组件 -->
                 <div th:if="${pageResult != null && pageResult.total > 0}" class="pagination-container">
                     <div class="pagination-info">
@@ -102,7 +105,7 @@
         const toggleElement = document.querySelector(`[onclick="toggleAnswer(${problemId})"]`);
         const iconElement = toggleElement.querySelector('i');
         const textElement = toggleElement.querySelector('.toggle-text');
-        
+
         if (answerElement.style.display === 'none' || answerElement.style.display === '') {
             answerElement.style.display = 'block';
             iconElement.classList.remove('fa-chevron-down');
@@ -115,44 +118,96 @@
             textElement.textContent = '查看答案';
         }
     }
-    
+
+    // 修复HTML实体的函数
+    function decodeHtmlEntities(text) {
+        const textarea = document.createElement('textarea');
+        textarea.innerHTML = text;
+        return textarea.value;
+    }
+
     // 添加LaTeX渲染函数
     function renderLatex() {
         const elements = document.querySelectorAll('.problem-content, .problem-answer');
         elements.forEach(el => {
             if (el.dataset.latexRendered) return;
-            
-            let content = el.innerHTML;
-            // 处理块级公式: $$...$$ 和 \[...\]
-            content = content.replace(/(\$\$|\\\[)([\s\S]*?)(\$\$|\\\])/g, (match, start, formula, end) => {
+
+            // 获取原始内容并解码HTML实体
+            let content = el.dataset.rawContent || el.innerHTML;
+            content = decodeHtmlEntities(content);
+
+            console.log('Processing content:', content.substring(0, 100)); // 调试日志
+
+            // 处理块级公式 $...$
+            content = content.replace(/\$\$([\s\S]*?)\$\$/g, function(match, formula) {
                 try {
-                    return katex.renderToString(formula.trim(), {throwOnError: false, displayMode: true});
+                    console.log('Rendering block formula:', formula.trim());
+                    return katex.renderToString(formula.trim(), {
+                        throwOnError: false,
+                        displayMode: true,
+                        strict: false
+                    });
                 } catch (e) {
-                    console.warn('块级LaTeX渲染错误:', e);
+                    console.warn('LaTeX块级公式渲染错误:', e, 'Formula:', formula);
                     return match;
                 }
             });
-            
-            // 处理行内公式: $...$ 和 \\(...\)
-            content = content.replace(/(\$|\\\()(.*?)(\$|\\\))/g, (match, start, formula, end) => {
+
+            // 处理行内公式 $...$（避免与块级公式冲突）
+            content = content.replace(/(?<!\$)\$([^$\n]+?)\$(?!\$)/g, function(match, formula) {
                 try {
-                    return katex.renderToString(formula.trim(), {throwOnError: false, displayMode: false});
+                    console.log('Rendering inline formula:', formula.trim());
+                    return katex.renderToString(formula.trim(), {
+                        throwOnError: false,
+                        displayMode: false,
+                        strict: false
+                    });
                 } catch (e) {
-                    console.warn('行内LaTeX渲染错误:', e);
+                    console.warn('LaTeX行内公式渲染错误:', e, 'Formula:', formula);
                     return match;
                 }
             });
-            
+
+            // 处理 \[...\] 块级公式
+            content = content.replace(/\\\[([\s\S]*?)\\\]/g, function(match, formula) {
+                try {
+                    console.log('Rendering bracket block formula:', formula.trim());
+                    return katex.renderToString(formula.trim(), {
+                        throwOnError: false,
+                        displayMode: true,
+                        strict: false
+                    });
+                } catch (e) {
+                    console.warn('LaTeX bracket块级公式渲染错误:', e, 'Formula:', formula);
+                    return match;
+                }
+            });
+
+            // 处理 \(...\) 行内公式
+            content = content.replace(/\\\((.*?)\\\)/g, function(match, formula) {
+                try {
+                    console.log('Rendering bracket inline formula:', formula.trim());
+                    return katex.renderToString(formula.trim(), {
+                        throwOnError: false,
+                        displayMode: false,
+                        strict: false
+                    });
+                } catch (e) {
+                    console.warn('LaTeX bracket行内公式渲染错误:', e, 'Formula:', formula);
+                    return match;
+                }
+            });
+
             el.innerHTML = content;
             el.dataset.latexRendered = 'true';
         });
     }
-    
+
     // 页面加载完成后初始化
     document.addEventListener('DOMContentLoaded', function() {
         // 初始渲染LaTeX
         renderLatex();
-        
+
         // 监听答案显示事件
         const observer = new MutationObserver(mutations => {
             mutations.forEach(mutation => {
@@ -166,19 +221,19 @@
                 }
             });
         });
-        
+
         // 观察所有答案元素
         document.querySelectorAll('.problem-answer').forEach(el => {
             observer.observe(el, { attributes: true, attributeFilter: ['style'] });
         });
     });
-    
+
     // 移除错题
     document.querySelectorAll('.remove-problem').forEach(button => {
         button.addEventListener('click', function() {
             const problemId = this.getAttribute('data-problem-id');
             const collectionId = this.getAttribute('data-collection-id');
-            
+
             if (confirm('确定要移除这道错题吗？')) {
                 fetch('/collection/remove-problem', {
                     method: 'POST',
@@ -187,21 +242,88 @@
                     },
                     body: `collectionId=${collectionId}&problemId=${problemId}`
                 })
-                .then(response => response.text())
-                .then(result => {
-                    if (result === 'success') {
-                        location.reload();
-                    } else {
-                        alert('移除失败，请重试');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('操作失败，请重试');
-                });
+                    .then(response => response.text())
+                    .then(result => {
+                        if (result === 'success') {
+                            location.reload();
+                        } else {
+                            alert('移除失败，请重试');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('操作失败，请重试');
+                    });
             }
         });
     });
 </script>
+
+<style>
+    .answer-toggle {
+        cursor: pointer;
+        color: #007bff;
+        margin: 10px 0;
+        padding: 5px 0;
+        user-select: none;
+    }
+
+    .answer-toggle:hover {
+        color: #0056b3;
+        text-decoration: underline;
+    }
+
+    .problem-answer {
+        margin-top: 10px;
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-left: 4px solid #28a745;
+        border-radius: 4px;
+    }
+
+    .problem-item {
+        margin-bottom: 30px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+
+    .problem-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .problem-number {
+        font-weight: bold;
+        color: #495057;
+    }
+
+    .problem-content {
+        margin-bottom: 15px;
+        line-height: 1.6;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px 0;
+    }
+
+    .empty-state i {
+        display: block;
+        margin: 0 auto 15px;
+        font-size: 32px;
+        color: #ccc;
+    }
+
+    .empty-state span {
+        display: block;
+        color: #666;
+    }
+</style>
 </body>
 </html>
