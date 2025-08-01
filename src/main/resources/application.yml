@@ -1,5 +1,9 @@
+# 服务器配置
 server:
   port: 8080
+  servlet:
+    session:
+      timeout: 7d  # 设置会话超时时间为7天
 
 spring:
   datasource:
@@ -46,4 +50,4 @@ pagehelper:
 logging:
   level:
     top.mygld.problemnote: debug
-    org.springframework.web: debug 
+    org.springframework.web: debug
