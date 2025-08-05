@@ -85,7 +85,7 @@
                     </div>
                 </div>
 
-                <!-- 分页组件 -->
+                <!-- 修复后的分页组件 -->
                 <div th:if="${pageResult != null && pageResult.total > 0}" class="pagination-container">
                     <div class="pagination-info">
                         <span>共 <strong th:text="${pageResult.total}">0</strong> 条记录，</span>
@@ -93,20 +93,42 @@
                         <span>共 <strong th:text="${pageResult.pages}">1</strong> 页</span>
                     </div>
                     <div class="pagination">
+                        <!-- 上一页按钮 -->
                         <a th:if="${pageResult.hasPreviousPage}"
                            th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult.pageNum - 1}, pageSize=${pageResult.pageSize})}"
                            class="page-link">
                             <i class="fas fa-chevron-left"></i> 上一页
                         </a>
 
-                        <span th:each="pageNum : ${#numbers.sequence(1, pageResult.pages)}"
-                              th:if="${pageNum >= pageResult.pageNum - 2 && pageNum <= pageResult.pageNum + 2}"
-                              class="page-link"
-                              th:classappend="${pageNum == pageResult.pageNum} ? 'active' : ''">
-                            <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageNum}, pageSize=${pageResult.pageSize})}"
-                               th:text="${pageNum}">1</a>
+                        <!-- 首页（当当前页大于3时显示） -->
+                        <span th:if="${pageResult.pageNum > 3}" class="page-link">
+                            <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=1, pageSize=${pageResult.pageSize})}">1</a>
                         </span>
 
+                        <!-- 省略号（当当前页大于4时显示） -->
+                        <span th:if="${pageResult.pageNum > 4}" class="page-link ellipsis">...</span>
+
+                        <!-- 页码范围计算并显示 -->
+                        <th:block th:with="startPage=${T(java.lang.Math).max(1, pageResult.pageNum - 2)},
+                                          endPage=${T(java.lang.Math).min(pageResult.pages, pageResult.pageNum + 2)}">
+                            <span th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                                  class="page-link"
+                                  th:classappend="${pageNum == pageResult.pageNum} ? 'active' : ''">
+                                <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageNum}, pageSize=${pageResult.pageSize})}"
+                                   th:text="${pageNum}">1</a>
+                            </span>
+                        </th:block>
+
+                        <!-- 省略号（当当前页距离最后一页大于3时显示） -->
+                        <span th:if="${pageResult.pageNum < pageResult.pages - 3}" class="page-link ellipsis">...</span>
+
+                        <!-- 最后一页（当当前页距离最后一页大于2时显示） -->
+                        <span th:if="${pageResult.pageNum < pageResult.pages - 2}" class="page-link">
+                            <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult.pages}, pageSize=${pageResult.pageSize})}"
+                               th:text="${pageResult.pages}">N</a>
+                        </span>
+
+                        <!-- 下一页按钮 -->
                         <a th:if="${pageResult.hasNextPage}"
                            th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult.pageNum + 1}, pageSize=${pageResult.pageSize})}"
                            class="page-link">
@@ -1035,6 +1057,73 @@
         color: #666;
     }
 
+    /* 分页样式优化 */
+    .pagination-container {
+        margin-top: 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .pagination-info {
+        color: #666;
+        font-size: 14px;
+    }
+
+    .pagination {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    .page-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 40px;
+        height: 40px;
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        color: #007bff;
+        text-decoration: none;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+
+    .page-link:hover {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        color: #0056b3;
+        text-decoration: none;
+    }
+
+    .page-link.active {
+        background-color: #007bff;
+        border-color: #007bff;
+        color: white;
+    }
+
+    .page-link.active:hover {
+        background-color: #0056b3;
+        border-color: #004085;
+    }
+
+    .page-link.ellipsis {
+        border: none;
+        background: none;
+        color: #6c757d;
+        cursor: default;
+    }
+
+    .page-link.ellipsis:hover {
+        background: none;
+        border: none;
+        color: #6c757d;
+    }
+
     /* 弹窗样式 */
     .problem-modal {
         display: none;
@@ -1270,6 +1359,17 @@
 
     /* 响应式设计 */
     @media (max-width: 768px) {
+        .pagination-container {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .pagination {
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         .modal-content-wrapper {
             width: 95%;
             height: 85%;
