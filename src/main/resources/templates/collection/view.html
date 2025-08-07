@@ -45,13 +45,13 @@
                                 </button>
                             </div>
                         </div>
-                        <!-- 修改：使用data属性存储原始内容 -->
+                        <!-- 使用data属性存储原始内容 -->
                         <div class="problem-content" th:data-raw-content="${problem.content}" th:utext="${problem.content}"></div>
                         <div class="answer-toggle" th:onclick="'toggleAnswer(' + ${problem.id} + ')'">
                             <i class="fas fa-chevron-down"></i>
                             <span class="toggle-text">查看答案</span>
                         </div>
-                        <!-- 修改：使用data属性存储原始内容 -->
+                        <!-- 使用data属性存储原始内容 -->
                         <div class="problem-answer" th:id="'answer-' + ${problem.id}" style="display: none;"
                              th:data-raw-content="${problem.answer}" th:utext="${problem.answer}"></div>
 
@@ -68,7 +68,7 @@
                     </div>
                 </div>
 
-                <!-- 修复后的分页组件 -->
+                <!-- 分页组件 -->
                 <div th:if="${pageResult != null && pageResult.total > 0}" class="pagination-container">
                     <div class="pagination-info">
                         <span>共 <strong th:text="${pageResult.total}">0</strong> 条记录，</span>
@@ -76,22 +76,15 @@
                         <span>共 <strong th:text="${pageResult.pages}">1</strong> 页</span>
                     </div>
                     <div class="pagination">
-                        <!-- 上一页按钮 -->
                         <a th:if="${pageResult.hasPreviousPage}"
                            th:href="@{/collection/view/{id}(id=${collection.id}, pageNum=${pageResult.pageNum - 1}, pageSize=${pageResult.pageSize})}"
                            class="page-link">
                             <i class="fas fa-chevron-left"></i> 上一页
                         </a>
-
-                        <!-- 首页（当当前页大于3时显示） -->
                         <span th:if="${pageResult.pageNum > 3}" class="page-link">
                             <a th:href="@{/collection/view/{id}(id=${collection.id}, pageNum=1, pageSize=${pageResult.pageSize})}">1</a>
                         </span>
-
-                        <!-- 省略号（当当前页大于4时显示） -->
                         <span th:if="${pageResult.pageNum > 4}" class="page-link ellipsis">...</span>
-
-                        <!-- 页码范围计算并显示 -->
                         <th:block th:with="startPage=${T(java.lang.Math).max(1, pageResult.pageNum - 2)},
                                           endPage=${T(java.lang.Math).min(pageResult.pages, pageResult.pageNum + 2)}">
                             <span th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
@@ -101,17 +94,11 @@
                                    th:text="${pageNum}">1</a>
                             </span>
                         </th:block>
-
-                        <!-- 省略号（当当前页距离最后一页大于3时显示） -->
                         <span th:if="${pageResult.pageNum < pageResult.pages - 3}" class="page-link ellipsis">...</span>
-
-                        <!-- 最后一页（当当前页距离最后一页大于2时显示） -->
                         <span th:if="${pageResult.pageNum < pageResult.pages - 2}" class="page-link">
                             <a th:href="@{/collection/view/{id}(id=${collection.id}, pageNum=${pageResult.pages}, pageSize=${pageResult.pageSize})}"
                                th:text="${pageResult.pages}">N</a>
                         </span>
-
-                        <!-- 下一页按钮 -->
                         <a th:if="${pageResult.hasNextPage}"
                            th:href="@{/collection/view/{id}(id=${collection.id}, pageNum=${pageResult.pageNum + 1}, pageSize=${pageResult.pageSize})}"
                            class="page-link">
@@ -127,21 +114,15 @@
 <!-- 题目放大弹窗 -->
 <div id="problemModal" class="problem-modal">
     <div class="modal-overlay"></div>
-
-    <!-- 关闭按钮 -->
     <button class="modal-close-btn" onclick="closeProblemModal()">
         <i class="fas fa-times"></i>
     </button>
-
-    <!-- 左右切换按钮 -->
     <button id="prevBtn" class="modal-nav-btn prev-btn" onclick="navigateProblems(-1)">
         <i class="fas fa-chevron-left"></i>
     </button>
     <button id="nextBtn" class="modal-nav-btn next-btn" onclick="navigateProblems(1)">
         <i class="fas fa-chevron-right"></i>
     </button>
-
-    <!-- 跨页导航按钮 -->
     <button id="prevPageBtn" class="modal-page-btn prev-page-btn" onclick="navigateToPage(-1)" style="display: none;">
         <i class="fas fa-angle-double-left"></i>
         <span>上一页</span>
@@ -150,22 +131,15 @@
         <span>下一页</span>
         <i class="fas fa-angle-double-right"></i>
     </button>
-
-    <!-- 题目卡片容器 -->
     <div class="modal-content-wrapper">
         <div id="problemCards" class="problem-cards-container"></div>
     </div>
-
-    <!-- 题目导航指示器 -->
     <div class="problem-indicator">
         <span id="currentProblemIndex">1</span> / <span id="totalProblems">1</span>
     </div>
-
-    <!-- 提示信息 -->
     <div id="navigationTip" class="navigation-tip"></div>
 </div>
 
-<!-- 公共脚本 -->
 <script th:replace="~{fragments/layout :: sidebar-script}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -187,15 +161,12 @@
         const toggleElement = document.querySelector(`[onclick="toggleAnswer(${problemId})"]`);
         const iconElement = toggleElement.querySelector('i');
         const textElement = toggleElement.querySelector('.toggle-text');
-
         if (answerElement.style.display === 'none' || answerElement.style.display === '') {
-            // 显示答案
             answerElement.style.display = 'block';
             iconElement.classList.remove('fa-chevron-down');
             iconElement.classList.add('fa-chevron-up');
             textElement.textContent = '隐藏答案';
         } else {
-            // 隐藏答案
             answerElement.style.display = 'none';
             iconElement.classList.remove('fa-chevron-up');
             iconElement.classList.add('fa-chevron-down');
@@ -274,28 +245,61 @@
         element.innerHTML = content;
     }
 
-    // 页面加载完成后渲染LaTeX公式
+    // 新增：将iframe替换为视频占位符的函数
+    function replaceIframesWithPlaceholders(container) {
+        container.querySelectorAll('iframe').forEach(iframe => {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'video-placeholder';
+            const width = iframe.getAttribute('width') || '560';
+            const height = iframe.getAttribute('height') || '315';
+            placeholder.style.width = width + 'px';
+            placeholder.style.height = height + 'px';
+            placeholder.style.backgroundColor = '#000';
+            placeholder.style.position = 'relative';
+            placeholder.style.cursor = 'pointer';
+
+            const playIcon = document.createElement('i');
+            playIcon.className = 'fas fa-play';
+            playIcon.style.position = 'absolute';
+            playIcon.style.top = '50%';
+            playIcon.style.left = '50%';
+            playIcon.style.transform = 'translate(-50%, -50%)';
+            playIcon.style.color = '#fff';
+            playIcon.style.fontSize = '3em';
+            placeholder.appendChild(playIcon);
+
+            placeholder.dataset.src = iframe.src;
+            iframe.parentNode.replaceChild(placeholder, iframe);
+        });
+    }
+
+    // 新增：图片最大宽度自适应
+    function styleImages(container) {
+        container.querySelectorAll('img').forEach(img => {
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            img.style.cursor = 'pointer';
+            img.onclick = function() {
+                window.open(img.src);
+            };
+        });
+    }
+
+    // 页面加载完成后渲染LaTeX公式和替换iframe、img（题目列表和详情中均执行）
     document.addEventListener('DOMContentLoaded', function() {
         console.log('错题集详情页面加载完成');
-
-        // 初始化题目数据
         initProblemsData();
 
-        // 渲染所有LaTeX公式
         function renderLatex() {
             document.querySelectorAll('.problem-content, .problem-answer').forEach(el => {
-                if (el.dataset.latexRendered) {
-                    return;
-                }
+                if (el.dataset.latexRendered) return;
                 renderLatexInElement(el);
                 el.dataset.latexRendered = 'true';
             });
         }
 
-        // 初始渲染
         renderLatex();
 
-        // 监听答案显示事件
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
@@ -308,14 +312,48 @@
                 }
             });
         });
-
         document.querySelectorAll('.problem-answer').forEach(el => {
             observer.observe(el, { attributes: true, attributeFilter: ['style'] });
+        });
+
+        // 替换题目列表中的iframe为占位符，图片自适应
+        document.querySelectorAll('.problem-content, .problem-answer').forEach(function(container) {
+            replaceIframesWithPlaceholders(container);
+            styleImages(container);
         });
 
         // 初始化拖拽支持
         initDragSupport();
         checkOpenProblem();
+
+        // 移除错题
+        document.querySelectorAll('.remove-problem').forEach(button => {
+            button.addEventListener('click', function() {
+                const problemId = this.getAttribute('data-problem-id');
+                const collectionId = this.getAttribute('data-collection-id');
+                if (confirm('确定要移除这道错题吗？')) {
+                    fetch('/collection/remove-problem', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: `collectionId=${collectionId}&problemId=${problemId}`
+                    })
+                        .then(response => response.text())
+                        .then(result => {
+                            if (result === 'success') {
+                                location.reload();
+                            } else {
+                                alert('移除失败，请重试');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('操作失败，请重试');
+                        });
+                }
+            });
+        });
     });
 
     // 初始化题目数据
@@ -340,12 +378,10 @@
         const modal = document.getElementById('problemModal');
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
-
         createProblemCards();
         updateModalNavigation();
         updateProblemIndicator();
 
-        // 渲染当前题目的LaTeX
         setTimeout(() => {
             renderLatexInModalCards();
         }, 100);
@@ -356,8 +392,6 @@
         const modal = document.getElementById('problemModal');
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
-
-        // 清理卡片
         document.getElementById('problemCards').innerHTML = '';
     }
 
@@ -365,8 +399,6 @@
     function createProblemCards() {
         const container = document.getElementById('problemCards');
         container.innerHTML = '';
-
-        // 创建当前题目及前后题目的卡片
         for (let i = -1; i <= 1; i++) {
             const cardIndex = currentModalIndex + i;
             if (cardIndex >= 0 && cardIndex < problemsData.length) {
@@ -374,8 +406,6 @@
                 container.appendChild(card);
             }
         }
-
-        // 设置容器位置
         updateCardsPosition(false);
     }
 
@@ -387,17 +417,26 @@
         card.dataset.index = index;
 
         card.innerHTML = `
-            <div class="modal-problem-header">
-                <h3>${problem.number}</h3>
-            </div>
-            <div class="modal-problem-content" data-raw-content="${problem.content}">${problem.content}</div>
-            <div class="modal-answer-toggle" onclick="toggleModalAnswer(${index})">
-                <i class="fas fa-chevron-down"></i>
-                <span class="toggle-text">查看答案</span>
-            </div>
-            <div class="modal-problem-answer" id="modal-answer-${index}" style="display: none;"
-                 data-raw-content="${problem.answer}">${problem.answer}</div>
-        `;
+      <div class="modal-problem-header">
+        <h3>${problem.number}</h3>
+      </div>
+      <div class="modal-problem-content"></div>
+      <div class="modal-answer-toggle" onclick="toggleModalAnswer(${index})">
+        <i class="fas fa-chevron-down"></i>
+        <span class="toggle-text">查看答案</span>
+      </div>
+      <div class="modal-problem-answer" id="modal-answer-${index}" style="display: none;"></div>
+    `;
+
+        const modalContent = card.querySelector('.modal-problem-content');
+        const modalAnswer = card.querySelector('.modal-problem-answer');
+        modalContent.innerHTML = problem.content;
+        modalAnswer.innerHTML = problem.answer;
+
+        replaceIframesWithPlaceholders(modalContent);
+        replaceIframesWithPlaceholders(modalAnswer);
+        styleImages(modalContent);
+        styleImages(modalAnswer);
 
         return card;
     }
@@ -408,7 +447,6 @@
         const toggleElement = document.querySelector(`[onclick="toggleModalAnswer(${index})"]`);
         const iconElement = toggleElement.querySelector('i');
         const textElement = toggleElement.querySelector('.toggle-text');
-
         if (answerElement.style.display === 'none' || answerElement.style.display === '') {
             answerElement.style.display = 'block';
             iconElement.classList.remove('fa-chevron-down');
@@ -420,32 +458,28 @@
             iconElement.classList.add('fa-chevron-down');
             textElement.textContent = '查看答案';
         }
-
-        // 重新渲染LaTeX
         setTimeout(() => {
             renderLatexInModalCards();
         }, 50);
     }
 
-    // 在弹窗卡片中渲染LaTeX
+    // 在弹窗卡片中渲染LaTeX并替换iframe、img
     function renderLatexInModalCards() {
         document.querySelectorAll('.modal-problem-content, .modal-problem-answer').forEach(el => {
             if (!el.dataset.latexRendered) {
                 renderLatexInElement(el);
                 el.dataset.latexRendered = 'true';
             }
+            replaceIframesWithPlaceholders(el);
+            styleImages(el);
         });
     }
 
     // 导航题目
     function navigateProblems(direction) {
         const newIndex = currentModalIndex + direction;
-
-        // 检查边界
         if (newIndex < 0) {
-            // 复原到当前位置
             updateCardsPosition(true);
-
             if (currentPage > 1) {
                 showNavigationTip('这是当前页面第一题，点击"上一页"查看上一页最后一题');
                 showPageNavigation();
@@ -454,11 +488,8 @@
             }
             return;
         }
-
         if (newIndex >= problemsData.length) {
-            // 复原到当前位置
             updateCardsPosition(true);
-
             if (currentPage < totalPages) {
                 showNavigationTip('这是当前页面最后一题，点击"下一页"查看下一页第一题');
                 showPageNavigation();
@@ -467,21 +498,14 @@
             }
             return;
         }
-
-        // 执行切换动画
         slideToIndex(newIndex, direction);
     }
 
-    // 滑动到指定索引
     function slideToIndex(newIndex, direction) {
         currentModalIndex = newIndex;
-
         const container = document.getElementById('problemCards');
         container.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
-
-        // 添加新卡片
         if (direction > 0) {
-            // 向右滑动，添加右侧卡片
             const nextCardIndex = currentModalIndex + 1;
             if (nextCardIndex < problemsData.length) {
                 const existingCard = container.querySelector(`[data-index="${nextCardIndex}"]`);
@@ -491,7 +515,6 @@
                 }
             }
         } else {
-            // 向左滑动，添加左侧卡片
             const prevCardIndex = currentModalIndex - 1;
             if (prevCardIndex >= 0) {
                 const existingCard = container.querySelector(`[data-index="${prevCardIndex}"]`);
@@ -501,11 +524,7 @@
                 }
             }
         }
-
-        // 更新位置
         updateCardsPosition(true);
-
-        // 清理远离的卡片
         setTimeout(() => {
             cleanupDistantCards();
             updateModalNavigation();
@@ -514,27 +533,22 @@
         }, 300);
     }
 
-    // 更新卡片位置
     function updateCardsPosition(animated = false) {
         const container = document.getElementById('problemCards');
         const cards = container.querySelectorAll('.problem-card');
-
         if (!animated) {
             container.style.transition = 'none';
         }
-
         cards.forEach(card => {
             const cardIndex = parseInt(card.dataset.index);
             const offset = cardIndex - currentModalIndex;
             card.style.transform = `translateX(${offset * 100}%)`;
-
             if (offset === 0) {
                 card.classList.add('active');
             } else {
                 card.classList.remove('active');
             }
         });
-
         if (!animated) {
             setTimeout(() => {
                 container.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -542,55 +556,41 @@
         }
     }
 
-    // 清理远离的卡片
     function cleanupDistantCards() {
         const container = document.getElementById('problemCards');
         const cards = container.querySelectorAll('.problem-card');
-
         cards.forEach(card => {
             const cardIndex = parseInt(card.dataset.index);
-            const distance = Math.abs(cardIndex - currentModalIndex);
-            if (distance > 1) {
+            if (Math.abs(cardIndex - currentModalIndex) > 1) {
                 card.remove();
             }
         });
     }
 
-    // 更新弹窗导航状态
     function updateModalNavigation() {
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
-
-        // 更新按钮状态
         if (currentModalIndex === 0) {
             prevBtn.classList.add('disabled');
         } else {
             prevBtn.classList.remove('disabled');
         }
-
         if (currentModalIndex === problemsData.length - 1) {
             nextBtn.classList.add('disabled');
         } else {
             nextBtn.classList.remove('disabled');
         }
-
-        // 显示/隐藏跨页按钮
         showPageNavigation();
     }
 
-    // 显示跨页导航
     function showPageNavigation() {
         const prevPageBtn = document.getElementById('prevPageBtn');
         const nextPageBtn = document.getElementById('nextPageBtn');
-
-        // 显示上一页按钮
         if (currentModalIndex === 0 && currentPage > 1) {
             prevPageBtn.style.display = 'flex';
         } else {
             prevPageBtn.style.display = 'none';
         }
-
-        // 显示下一页按钮
         if (currentModalIndex === problemsData.length - 1 && currentPage < totalPages) {
             nextPageBtn.style.display = 'flex';
         } else {
@@ -598,68 +598,52 @@
         }
     }
 
-    // 跨页导航
     function navigateToPage(direction) {
         const newPage = currentPage + direction;
         if (newPage < 1 || newPage > totalPages) return;
-
         let url = `/collection/view/${collectionId}?pageNum=${newPage}&pageSize=${pageSize}`;
-
-        // 如果是向后翻页，添加参数指示要打开最后一题
         if (direction < 0) {
             url += '&openLast=true';
         } else if (direction > 0) {
             url += '&openFirst=true';
         }
-
         window.location.href = url;
     }
 
-    // 更新题目指示器
     function updateProblemIndicator() {
         document.getElementById('currentProblemIndex').textContent = currentModalIndex + 1;
         document.getElementById('totalProblems').textContent = problemsData.length;
     }
 
-    // 显示导航提示
     function showNavigationTip(message) {
         const tip = document.getElementById('navigationTip');
         tip.textContent = message;
         tip.classList.add('show');
-
         setTimeout(() => {
             tip.classList.remove('show');
         }, 2000);
     }
 
-    // 添加触摸和鼠标拖拽支持
     function initDragSupport() {
         const modal = document.getElementById('problemModal');
         const cardsContainer = document.getElementById('problemCards');
-
         let startX = 0, startY = 0;
         let currentX = 0, currentY = 0;
         let isDragging = false;
-        let dragMode = null; // null | 'horizontal' | 'vertical'
+        let dragMode = null;
         let dragStartIndex = 0;
 
-        // 鼠标事件
         cardsContainer.addEventListener('mousedown', handleDragStart);
         document.addEventListener('mousemove', handleDragMove);
         document.addEventListener('mouseup', handleDragEnd);
-
-        // 触摸事件
         cardsContainer.addEventListener('touchstart', handleDragStart, { passive: true });
         document.addEventListener('touchmove', handleDragMove, { passive: false });
         document.addEventListener('touchend', handleDragEnd);
 
         function handleDragStart(e) {
-            // 如果点击的是按钮，不启动拖拽
             if (e.target.closest('.modal-answer-toggle')) {
                 return;
             }
-
-            // 记录起始坐标
             isDragging = true;
             dragMode = null;
             dragStartIndex = currentModalIndex;
@@ -667,20 +651,14 @@
             startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
             currentX = startX;
             currentY = startY;
-
-            // 先不拦截默认，等判定方向后再决定
             cardsContainer.style.transition = 'none';
         }
-
         function handleDragMove(e) {
             if (!isDragging) return;
-
             const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
             const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
             const deltaX = clientX - startX;
             const deltaY = clientY - startY;
-
-            // 未确定拖拽方向时，先判断一下
             if (!dragMode) {
                 if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                     dragMode = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
@@ -688,18 +666,12 @@
                     return;
                 }
             }
-
             if (dragMode === 'vertical') {
-                // 放弃拖拽逻辑，让浏览器滚动
                 isDragging = false;
                 cardsContainer.style.transition = '';
                 return;
             }
-
-            // horizontal 拖拽，阻止默认滚动
             e.preventDefault();
-
-            // 更新位置
             currentX = clientX;
             const dragPercent = (currentX - startX) / window.innerWidth;
             const cards = cardsContainer.querySelectorAll('.problem-card');
@@ -708,7 +680,6 @@
                 const offset = idx - currentModalIndex;
                 const tx = (offset * 100) + (dragPercent * 100);
                 card.style.transform = `translateX(${tx}%)`;
-                // 透明度渐变
                 if (offset === 0) {
                     card.style.opacity = 1 - Math.abs(dragPercent) * 0.3;
                 } else if ((offset === -1 && dragPercent > 0) || (offset === 1 && dragPercent < 0)) {
@@ -716,24 +687,19 @@
                 }
             });
         }
-
         function handleDragEnd(e) {
             if (!isDragging || dragMode !== 'horizontal') {
                 isDragging = false;
                 dragMode = null;
                 return;
             }
-
             isDragging = false;
             cardsContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             const deltaX = currentX - startX;
             const threshold = 80;
-
-            // 恢复透明度
             cardsContainer.querySelectorAll('.problem-card').forEach(card => {
                 card.style.opacity = '';
             });
-
             if (Math.abs(deltaX) > threshold) {
                 if (deltaX > 0) {
                     navigateProblems(-1);
@@ -741,31 +707,22 @@
                     navigateProblems(1);
                 }
             } else {
-                // 回到原位
                 updateCardsPosition(true);
             }
-
             dragMode = null;
         }
     }
 
-    // 检查URL参数，如果需要打开最后一题
     function checkOpenProblem() {
         const urlParams = new URLSearchParams(window.location.search);
-
         if (urlParams.get('openLast') === 'true' && problemsData.length > 0) {
-            // 打开最后一题
             setTimeout(() => openProblemModal(problemsData.length - 1), 100);
-        }
-        else if (urlParams.get('openFirst') === 'true' && problemsData.length > 0) {
-            // 打开第一题
+        } else if (urlParams.get('openFirst') === 'true' && problemsData.length > 0) {
             setTimeout(() => openProblemModal(0), 100);
         }
     }
 
-    // 页面加载完成后初始化所有功能
     document.addEventListener('DOMContentLoaded', function() {
-        // 键盘快捷键支持
         document.addEventListener('keydown', function(e) {
             const modal = document.getElementById('problemModal');
             if (modal.style.display === 'flex') {
@@ -783,35 +740,31 @@
         });
     });
 
-    // 移除错题
-    document.querySelectorAll('.remove-problem').forEach(button => {
-        button.addEventListener('click', function() {
-            const problemId = this.getAttribute('data-problem-id');
-            const collectionId = this.getAttribute('data-collection-id');
-
-            if (confirm('确定要移除这道错题吗？')) {
-                fetch('/collection/remove-problem', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: `collectionId=${collectionId}&problemId=${problemId}`
-                })
-                    .then(response => response.text())
-                    .then(result => {
-                        if (result === 'success') {
-                            location.reload();
-                        } else {
-                            alert('移除失败，请重试');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('操作失败，请重试');
-                    });
+    // ----------- 新增：modal区域视频占位符点击自动加载并自动播放 -----------
+    document.body.addEventListener('click', function(e) {
+        const placeholder = e.target.closest('.video-placeholder');
+        if (placeholder) {
+            // 获取宽高和src
+            const width = placeholder.style.width.replace('px','') || '560';
+            const height = placeholder.style.height.replace('px','') || '315';
+            let src = placeholder.dataset.src;
+            if (src.includes('autoplay=1')) {
+            } else if (src.includes('?')) {
+                src += '&autoplay=1';
+            } else {
+                src += '?autoplay=1';
             }
-        });
+            const videoIframe = document.createElement('iframe');
+            videoIframe.src = src;
+            videoIframe.setAttribute('width', width);
+            videoIframe.setAttribute('height', height);
+            videoIframe.setAttribute('frameborder', '0');
+            videoIframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+            videoIframe.setAttribute('allowfullscreen', 'true');
+            placeholder.parentNode.replaceChild(videoIframe, placeholder);
+        }
     });
+    // ---------------------------------------------------------------
 </script>
 
 <style>
@@ -1249,6 +1202,10 @@
             bottom: 60px;
             right: 10px;
         }
+    }
+    /* 视频占位符样式，可根据需要自行补充 */
+    .video-placeholder {
+        /* 基本样式已在JS内联设置 */
     }
 </style>
 </body>

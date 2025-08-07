@@ -9,17 +9,22 @@
 <div class="main-content">
     <div class="content-header">
         <h1><i class="fas fa-clipboard-list"></i> 题目列表</h1>
-        <p>知识点: <span th:text="${tag != null ? tag.name : ''}"></span> - 科目: <span th:text="${subject != null ? subject.name : ''}"></span></p>
+        <p>
+            知识点: <span th:text="${tag != null ? tag.name : ''}"></span>
+            - 科目: <span th:text="${subject != null ? subject.name : ''}"></span>
+        </p>
     </div>
 
     <div class="card">
         <div class="card-header">
             <h3><i class="fas fa-file-alt"></i> 试卷预览</h3>
             <div style="float: right;">
-                <a th:href="@{/problem/manage/add(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult != null ? pageResult.pageNum : 1}, pageSize=${pageResult != null ? pageResult.pageSize : 10})}" class="btn btn-success">
+                <a
+                        th:href="@{/problem/manage/add(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult != null ? pageResult.pageNum : 1}, pageSize=${pageResult != null ? pageResult.pageSize : 10})}"
+                        class="btn btn-success">
                     <i class="fas fa-plus"></i> 添加题目
                 </a>
-                <!-- 新增：导出错题按钮 -->
+                <!-- 导出错题按钮 -->
                 <button class="btn btn-danger" data-toggle="modal" data-target="#exportModal">
                     <i class="fas fa-file-export"></i> 导出错题
                 </button>
@@ -36,13 +41,22 @@
             <div class="exam-paper">
                 <div class="exam-header">
                     <h2 th:text="${(subject != null ? subject.name : '') + ' - ' + (tag != null ? tag.name : '') + ' 练习题'}"></h2>
-                    <p>共 <span th:text="${pageResult.total}"></span> 道题，当前第 <span th:text="${pageResult.pageNum}"></span> 页，共 <span th:text="${pageResult.pages}"></span> 页</p>
+                    <p>
+                        共 <span th:text="${pageResult.total}"></span> 道题，
+                        当前第 <span th:text="${pageResult.pageNum}"></span> 页，
+                        共 <span th:text="${pageResult.pages}"></span> 页
+                    </p>
                 </div>
 
                 <div class="problems-container">
-                    <div th:each="problem, iterStat : ${problems}" class="problem-item" th:data-problem-index="${iterStat.index}" th:data-problem-id="${problem.id}">
+                    <div th:each="problem, iterStat : ${problems}"
+                         class="problem-item"
+                         th:data-problem-index="${iterStat.index}"
+                         th:data-problem-id="${problem.id}">
                         <div class="problem-header">
-                            <span class="problem-number">第 [[${(pageResult.pageNum - 1) * pageResult.pageSize + iterStat.index + 1}]] 题</span>
+                  <span class="problem-number">
+                    第 [[${(pageResult.pageNum - 1) * pageResult.pageSize + iterStat.index + 1}]] 题
+                  </span>
                             <!-- 错题标记按钮 -->
                             <button class="btn btn-sm btn-link star-toggle" th:data-problem-id="${problem.id}">
                                 <i class="far fa-star"></i>
@@ -53,24 +67,39 @@
                                 <button class="btn btn-sm btn-info" th:onclick="'openProblemModal(' + ${iterStat.index} + ')'">
                                     <i class="fas fa-expand"></i> 放大查看
                                 </button>
-                                <a th:href="@{/problem/manage/edit/{id}(id=${problem.id}, tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult != null ? pageResult.pageNum : 1}, pageSize=${pageResult != null ? pageResult.pageSize : 10})}" class="btn btn-sm btn-warning">
+                                <a th:href="@{/problem/manage/edit/{id}(id=${problem.id},
+                          tagId=${tag != null ? tag.id : 0},
+                          subjectId=${subject != null ? subject.id : 0},
+                          pageNum=${pageResult != null ? pageResult.pageNum : 1},
+                          pageSize=${pageResult != null ? pageResult.pageSize : 10})}"
+                                   class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i> 编辑
                                 </a>
-                                <a th:href="@{/problem/manage/delete/{id}(id=${problem.id}, tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult != null ? pageResult.pageNum : 1}, pageSize=${pageResult != null ? pageResult.pageSize : 10})}"
-                                   onclick="return confirm('确定要删除这道题吗？')" class="btn btn-sm btn-danger">
+                                <a th:href="@{/problem/manage/delete/{id}(id=${problem.id},
+                          tagId=${tag != null ? tag.id : 0},
+                          subjectId=${subject != null ? subject.id : 0},
+                          pageNum=${pageResult != null ? pageResult.pageNum : 1},
+                          pageSize=${pageResult != null ? pageResult.pageSize : 10})}"
+                                   onclick="return confirm('确定要删除这道题吗？')"
+                                   class="btn btn-sm btn-danger">
                                     <i class="fas fa-trash"></i> 删除
                                 </a>
                             </div>
                         </div>
-                        <!-- 修改：使用data属性存储原始内容 -->
-                        <div class="problem-content" th:data-raw-content="${problem.content}" th:utext="${problem.content}"></div>
+                        <!-- 使用data属性存储原始内容 -->
+                        <div class="problem-content"
+                             th:data-raw-content="${problem.content}"
+                             th:utext="${problem.content}"></div>
                         <div class="answer-toggle" th:onclick="'toggleAnswer(' + ${problem.id} + ')'">
                             <i class="fas fa-chevron-down"></i>
                             <span class="toggle-text">查看答案</span>
                         </div>
-                        <!-- 修改：使用data属性存储原始内容 -->
-                        <div class="problem-answer" th:id="'answer-' + ${problem.id}" style="display: none;"
-                             th:data-raw-content="${problem.answer}" th:utext="${problem.answer}"></div>
+                        <!-- 使用data属性存储原始内容 -->
+                        <div class="problem-answer"
+                             th:id="'answer-' + ${problem.id}"
+                             style="display: none;"
+                             th:data-raw-content="${problem.answer}"
+                             th:utext="${problem.answer}"></div>
 
                         <!-- 隐藏的数据存储 -->
                         <div class="problem-data" style="display: none;"
@@ -85,7 +114,7 @@
                     </div>
                 </div>
 
-                <!-- 修复后的分页组件 -->
+                <!-- 分页组件 -->
                 <div th:if="${pageResult != null && pageResult.total > 0}" class="pagination-container">
                     <div class="pagination-info">
                         <span>共 <strong th:text="${pageResult.total}">0</strong> 条记录，</span>
@@ -93,44 +122,51 @@
                         <span>共 <strong th:text="${pageResult.pages}">1</strong> 页</span>
                     </div>
                     <div class="pagination">
-                        <!-- 上一页按钮 -->
                         <a th:if="${pageResult.hasPreviousPage}"
-                           th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult.pageNum - 1}, pageSize=${pageResult.pageSize})}"
+                           th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0},
+                           subjectId=${subject != null ? subject.id : 0},
+                           pageNum=${pageResult.pageNum - 1},
+                           pageSize=${pageResult.pageSize})}"
                            class="page-link">
                             <i class="fas fa-chevron-left"></i> 上一页
                         </a>
 
-                        <!-- 首页（当当前页大于3时显示） -->
                         <span th:if="${pageResult.pageNum > 3}" class="page-link">
-                            <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=1, pageSize=${pageResult.pageSize})}">1</a>
-                        </span>
+                  <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0},
+                           subjectId=${subject != null ? subject.id : 0},
+                           pageNum=1, pageSize=${pageResult.pageSize})}">1</a>
+                </span>
 
-                        <!-- 省略号（当当前页大于4时显示） -->
                         <span th:if="${pageResult.pageNum > 4}" class="page-link ellipsis">...</span>
 
-                        <!-- 页码范围计算并显示 -->
                         <th:block th:with="startPage=${T(java.lang.Math).max(1, pageResult.pageNum - 2)},
-                                          endPage=${T(java.lang.Math).min(pageResult.pages, pageResult.pageNum + 2)}">
-                            <span th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
-                                  class="page-link"
-                                  th:classappend="${pageNum == pageResult.pageNum} ? 'active' : ''">
-                                <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageNum}, pageSize=${pageResult.pageSize})}"
-                                   th:text="${pageNum}">1</a>
-                            </span>
+                                  endPage=${T(java.lang.Math).min(pageResult.pages, pageResult.pageNum + 2)}">
+                  <span th:each="pageNum : ${#numbers.sequence(startPage, endPage)}"
+                        class="page-link"
+                        th:classappend="${pageNum == pageResult.pageNum} ? 'active' : ''">
+                    <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0},
+                          subjectId=${subject != null ? subject.id : 0},
+                          pageNum=${pageNum},
+                          pageSize=${pageResult.pageSize})}"
+                       th:text="${pageNum}">1</a>
+                  </span>
                         </th:block>
 
-                        <!-- 省略号（当当前页距离最后一页大于3时显示） -->
                         <span th:if="${pageResult.pageNum < pageResult.pages - 3}" class="page-link ellipsis">...</span>
 
-                        <!-- 最后一页（当当前页距离最后一页大于2时显示） -->
                         <span th:if="${pageResult.pageNum < pageResult.pages - 2}" class="page-link">
-                            <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult.pages}, pageSize=${pageResult.pageSize})}"
-                               th:text="${pageResult.pages}">N</a>
-                        </span>
+                  <a th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0},
+                          subjectId=${subject != null ? subject.id : 0},
+                          pageNum=${pageResult.pages},
+                          pageSize=${pageResult.pageSize})}"
+                     th:text="${pageResult.pages}">N</a>
+                </span>
 
-                        <!-- 下一页按钮 -->
                         <a th:if="${pageResult.hasNextPage}"
-                           th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0}, subjectId=${subject != null ? subject.id : 0}, pageNum=${pageResult.pageNum + 1}, pageSize=${pageResult.pageSize})}"
+                           th:href="@{/problem/list(tagId=${tag != null ? tag.id : 0},
+                          subjectId=${subject != null ? subject.id : 0},
+                          pageNum=${pageResult.pageNum + 1},
+                          pageSize=${pageResult.pageSize})}"
                            class="page-link">
                             下一页 <i class="fas fa-chevron-right"></i>
                         </a>
@@ -210,13 +246,11 @@
         const textElement = toggleElement.querySelector('.toggle-text');
 
         if (answerElement.style.display === 'none' || answerElement.style.display === '') {
-            // 显示答案
             answerElement.style.display = 'block';
             iconElement.classList.remove('fa-chevron-down');
             iconElement.classList.add('fa-chevron-up');
             textElement.textContent = '隐藏答案';
         } else {
-            // 隐藏答案
             answerElement.style.display = 'none';
             iconElement.classList.remove('fa-chevron-up');
             iconElement.classList.add('fa-chevron-down');
@@ -295,7 +329,36 @@
         element.innerHTML = content;
     }
 
-    // 页面加载完成后渲染LaTeX公式
+    // 新增：将iframe替换为视频占位符的函数
+    function replaceIframesWithPlaceholders(container) {
+        container.querySelectorAll('iframe').forEach(iframe => {
+            const placeholder = document.createElement('div');
+            placeholder.className = 'video-placeholder';
+            const width = iframe.getAttribute('width') || '560';
+            const height = iframe.getAttribute('height') || '315';
+            placeholder.style.width = width + 'px';
+            placeholder.style.height = height + 'px';
+            placeholder.style.backgroundColor = '#000';
+            placeholder.style.position = 'relative';
+            placeholder.style.cursor = 'pointer';
+
+            const playIcon = document.createElement('i');
+            playIcon.className = 'fas fa-play';
+            playIcon.style.position = 'absolute';
+            playIcon.style.top = '50%';
+            playIcon.style.left = '50%';
+            playIcon.style.transform = 'translate(-50%, -50%)';
+            playIcon.style.color = '#fff';
+            playIcon.style.fontSize = '3em';
+            placeholder.appendChild(playIcon);
+
+            placeholder.dataset.src = iframe.src;
+            // 不在这里绑事件，统一用事件委托
+            iframe.parentNode.replaceChild(placeholder, iframe);
+        });
+    }
+
+    // 页面加载完成后渲染LaTeX公式和替换iframe（题目列表和详情中均执行）
     document.addEventListener('DOMContentLoaded', function() {
         console.log('题目列表页面加载完成');
 
@@ -313,7 +376,6 @@
             });
         }
 
-        // 初始渲染
         renderLatex();
 
         // 监听答案显示事件
@@ -329,16 +391,20 @@
                 }
             });
         });
-
         document.querySelectorAll('.problem-answer').forEach(el => {
             observer.observe(el, { attributes: true, attributeFilter: ['style'] });
+        });
+
+        // 替换题目列表中的iframe为占位符
+        document.querySelectorAll('.problem-content, .problem-answer').forEach(function(container) {
+            replaceIframesWithPlaceholders(container);
         });
 
         // 加载已标记的题目
         loadMarkedProblems();
         initProblemCollection();
 
-        // 确认导出按钮点击事件
+        // 确认导出按钮事件
         const confirmExportBtn = document.getElementById('confirmExport');
         if (confirmExportBtn) {
             confirmExportBtn.addEventListener('click', function() {
@@ -347,12 +413,10 @@
                     alert('请选择错题集');
                     return;
                 }
-
                 if (markedProblems.size === 0) {
                     alert('请先标记错题');
                     return;
                 }
-
                 exportProblems(collectionId, tagId);
             });
         }
@@ -385,7 +449,7 @@
         updateModalNavigation();
         updateProblemIndicator();
 
-        // 渲染当前题目的LaTeX
+        // 渲染modal内部LaTeX及替换iframe占位符
         setTimeout(() => {
             renderLatexInModalCards();
         }, 100);
@@ -396,8 +460,6 @@
         const modal = document.getElementById('problemModal');
         modal.style.display = 'none';
         document.body.style.overflow = 'auto';
-
-        // 清理卡片
         document.getElementById('problemCards').innerHTML = '';
     }
 
@@ -406,7 +468,6 @@
         const container = document.getElementById('problemCards');
         container.innerHTML = '';
 
-        // 创建当前题目及前后题目的卡片
         for (let i = -1; i <= 1; i++) {
             const cardIndex = currentModalIndex + i;
             if (cardIndex >= 0 && cardIndex < problemsData.length) {
@@ -414,12 +475,10 @@
                 container.appendChild(card);
             }
         }
-
-        // 设置容器位置
         updateCardsPosition(false);
     }
 
-    // 创建单个题目卡片
+    // 创建单个题目卡片（在modal中）
     function createProblemCard(index) {
         const problem = problemsData[index];
         const card = document.createElement('div');
@@ -427,34 +486,38 @@
         card.dataset.index = index;
 
         card.innerHTML = `
-            <div class="modal-problem-header">
-                <h3>${problem.number}</h3>
-                <button class="btn btn-sm btn-link star-toggle" data-problem-id="${problem.id}">
-                    <i class="far fa-star"></i>
-                    <span>标记</span>
-                </button>
-            </div>
-            <div class="modal-problem-content" data-raw-content="${problem.content}">${problem.content}</div>
-            <div class="modal-answer-toggle" onclick="toggleModalAnswer(${index})">
-                <i class="fas fa-chevron-down"></i>
-                <span class="toggle-text">查看答案</span>
-            </div>
-            <div class="modal-problem-answer" id="modal-answer-${index}" style="display: none;"
-                 data-raw-content="${problem.answer}">${problem.answer}</div>
+          <div class="modal-problem-header">
+            <h3>${problem.number}</h3>
+            <button class="btn btn-sm btn-link star-toggle" data-problem-id="${problem.id}">
+              <i class="far fa-star"></i>
+              <span>标记</span>
+            </button>
+          </div>
+          <div class="modal-problem-content"></div>
+          <div class="modal-answer-toggle" onclick="toggleModalAnswer(${index})">
+            <i class="fas fa-chevron-down"></i>
+            <span class="toggle-text">查看答案</span>
+          </div>
+          <div class="modal-problem-answer" id="modal-answer-${index}" style="display: none;"></div>
         `;
 
-        // 初始化标记按钮状态
+        const modalContent = card.querySelector('.modal-problem-content');
+        modalContent.innerHTML = problem.content;
+        const modalAnswer = card.querySelector('.modal-problem-answer');
+        modalAnswer.innerHTML = problem.answer;
+
+        // 立即替换modal区域内的iframe为占位符
+        replaceIframesWithPlaceholders(modalContent);
+        replaceIframesWithPlaceholders(modalAnswer);
+
         const starBtn = card.querySelector('.star-toggle');
         const icon = starBtn.querySelector('i');
         const text = starBtn.querySelector('span');
-
         if (markedProblems.has(problem.id.toString())) {
             icon.classList.remove('far');
             icon.classList.add('fas', 'text-warning');
             text.textContent = '已标记';
         }
-
-        // 绑定标记事件
         starBtn.addEventListener('click', function() {
             toggleProblemCollection(problem.id, icon, text, starBtn);
         });
@@ -462,7 +525,7 @@
         return card;
     }
 
-    // 切换弹窗中的答案显示
+    // 切换modal中答案显示
     function toggleModalAnswer(index) {
         const answerElement = document.getElementById('modal-answer-' + index);
         const toggleElement = document.querySelector(`[onclick="toggleModalAnswer(${index})"]`);
@@ -481,31 +544,27 @@
             textElement.textContent = '查看答案';
         }
 
-        // 重新渲染LaTeX
         setTimeout(() => {
             renderLatexInModalCards();
         }, 50);
     }
 
-    // 在弹窗卡片中渲染LaTeX
+    // 在modal卡片中渲染LaTeX并替换iframe
     function renderLatexInModalCards() {
         document.querySelectorAll('.modal-problem-content, .modal-problem-answer').forEach(el => {
             if (!el.dataset.latexRendered) {
                 renderLatexInElement(el);
                 el.dataset.latexRendered = 'true';
             }
+            replaceIframesWithPlaceholders(el);
         });
     }
 
-    // 导航题目
+    // 导航题目卡片
     function navigateProblems(direction) {
         const newIndex = currentModalIndex + direction;
-
-        // 检查边界
         if (newIndex < 0) {
-            // 复原到当前位置
             updateCardsPosition(true);
-
             if (currentPage > 1) {
                 showNavigationTip('这是当前页面第一题，点击"上一页"查看上一页最后一题');
                 showPageNavigation();
@@ -514,11 +573,8 @@
             }
             return;
         }
-
         if (newIndex >= problemsData.length) {
-            // 复原到当前位置
             updateCardsPosition(true);
-
             if (currentPage < totalPages) {
                 showNavigationTip('这是当前页面最后一题，点击"下一页"查看下一页第一题');
                 showPageNavigation();
@@ -527,21 +583,16 @@
             }
             return;
         }
-
-        // 执行切换动画
         slideToIndex(newIndex, direction);
     }
 
     // 滑动到指定索引
     function slideToIndex(newIndex, direction) {
         currentModalIndex = newIndex;
-
         const container = document.getElementById('problemCards');
         container.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
-        // 添加新卡片
         if (direction > 0) {
-            // 向右滑动，添加右侧卡片
             const nextCardIndex = currentModalIndex + 1;
             if (nextCardIndex < problemsData.length) {
                 const existingCard = container.querySelector(`[data-index="${nextCardIndex}"]`);
@@ -551,7 +602,6 @@
                 }
             }
         } else {
-            // 向左滑动，添加左侧卡片
             const prevCardIndex = currentModalIndex - 1;
             if (prevCardIndex >= 0) {
                 const existingCard = container.querySelector(`[data-index="${prevCardIndex}"]`);
@@ -562,10 +612,8 @@
             }
         }
 
-        // 更新位置
         updateCardsPosition(true);
 
-        // 清理远离的卡片
         setTimeout(() => {
             cleanupDistantCards();
             updateModalNavigation();
@@ -578,24 +626,19 @@
     function updateCardsPosition(animated = false) {
         const container = document.getElementById('problemCards');
         const cards = container.querySelectorAll('.problem-card');
-
         if (!animated) {
             container.style.transition = 'none';
         }
-
-        let translateX = 0;
         cards.forEach(card => {
             const cardIndex = parseInt(card.dataset.index);
             const offset = cardIndex - currentModalIndex;
             card.style.transform = `translateX(${offset * 100}%)`;
-
             if (offset === 0) {
                 card.classList.add('active');
             } else {
                 card.classList.remove('active');
             }
         });
-
         if (!animated) {
             setTimeout(() => {
                 container.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
@@ -607,35 +650,28 @@
     function cleanupDistantCards() {
         const container = document.getElementById('problemCards');
         const cards = container.querySelectorAll('.problem-card');
-
         cards.forEach(card => {
             const cardIndex = parseInt(card.dataset.index);
-            const distance = Math.abs(cardIndex - currentModalIndex);
-            if (distance > 1) {
+            if (Math.abs(cardIndex - currentModalIndex) > 1) {
                 card.remove();
             }
         });
     }
 
-    // 更新弹窗导航状态
+    // 更新modal导航状态
     function updateModalNavigation() {
         const prevBtn = document.getElementById('prevBtn');
         const nextBtn = document.getElementById('nextBtn');
-
-        // 更新按钮状态
         if (currentModalIndex === 0) {
             prevBtn.classList.add('disabled');
         } else {
             prevBtn.classList.remove('disabled');
         }
-
         if (currentModalIndex === problemsData.length - 1) {
             nextBtn.classList.add('disabled');
         } else {
             nextBtn.classList.remove('disabled');
         }
-
-        // 显示/隐藏跨页按钮
         showPageNavigation();
     }
 
@@ -643,15 +679,11 @@
     function showPageNavigation() {
         const prevPageBtn = document.getElementById('prevPageBtn');
         const nextPageBtn = document.getElementById('nextPageBtn');
-
-        // 显示上一页按钮
         if (currentModalIndex === 0 && currentPage > 1) {
             prevPageBtn.style.display = 'flex';
         } else {
             prevPageBtn.style.display = 'none';
         }
-
-        // 显示下一页按钮
         if (currentModalIndex === problemsData.length - 1 && currentPage < totalPages) {
             nextPageBtn.style.display = 'flex';
         } else {
@@ -663,16 +695,12 @@
     function navigateToPage(direction) {
         const newPage = currentPage + direction;
         if (newPage < 1 || newPage > totalPages) return;
-
         let url = `/problem/list?tagId=${tagId}&subjectId=${subjectId}&pageNum=${newPage}&pageSize=${pageSize}`;
-
-        // 如果是向后翻页，添加参数指示要打开最后一题
         if (direction < 0) {
             url += '&openLast=true';
         } else if (direction > 0) {
             url += '&openFirst=true';
         }
-
         window.location.href = url;
     }
 
@@ -687,41 +715,33 @@
         const tip = document.getElementById('navigationTip');
         tip.textContent = message;
         tip.classList.add('show');
-
         setTimeout(() => {
             tip.classList.remove('show');
         }, 2000);
     }
 
-    // 添加触摸和鼠标拖拽支持
-    // 添加触摸和鼠标拖拽支持
+    // 添加拖拽支持
     function initDragSupport() {
         const modal = document.getElementById('problemModal');
         const cardsContainer = document.getElementById('problemCards');
-
         let startX = 0, startY = 0;
         let currentX = 0, currentY = 0;
         let isDragging = false;
-        let dragMode = null; // null | 'horizontal' | 'vertical'
+        let dragMode = null;
         let dragStartIndex = 0;
 
-        // 鼠标事件
         cardsContainer.addEventListener('mousedown', handleDragStart);
         document.addEventListener('mousemove', handleDragMove);
         document.addEventListener('mouseup', handleDragEnd);
 
-        // 触摸事件
         cardsContainer.addEventListener('touchstart', handleDragStart, { passive: true });
         document.addEventListener('touchmove', handleDragMove, { passive: false });
         document.addEventListener('touchend', handleDragEnd);
 
         function handleDragStart(e) {
-            // 如果点击的是按钮，不启动拖拽
             if (e.target.closest('.star-toggle') || e.target.closest('.modal-answer-toggle')) {
                 return;
             }
-
-            // 记录起始坐标
             isDragging = true;
             dragMode = null;
             dragStartIndex = currentModalIndex;
@@ -729,20 +749,15 @@
             startY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
             currentX = startX;
             currentY = startY;
-
-            // 先不拦截默认，等判定方向后再决定
             cardsContainer.style.transition = 'none';
         }
 
         function handleDragMove(e) {
             if (!isDragging) return;
-
             const clientX = e.type.includes('touch') ? e.touches[0].clientX : e.clientX;
             const clientY = e.type.includes('touch') ? e.touches[0].clientY : e.clientY;
             const deltaX = clientX - startX;
             const deltaY = clientY - startY;
-
-            // 未确定拖拽方向时，先判断一下
             if (!dragMode) {
                 if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
                     dragMode = Math.abs(deltaX) > Math.abs(deltaY) ? 'horizontal' : 'vertical';
@@ -750,18 +765,12 @@
                     return;
                 }
             }
-
             if (dragMode === 'vertical') {
-                // 放弃拖拽逻辑，让浏览器滚动
                 isDragging = false;
                 cardsContainer.style.transition = '';
                 return;
             }
-
-            // horizontal 拖拽，阻止默认滚动
             e.preventDefault();
-
-            // 更新位置
             currentX = clientX;
             const dragPercent = (currentX - startX) / window.innerWidth;
             const cards = cardsContainer.querySelectorAll('.problem-card');
@@ -770,7 +779,6 @@
                 const offset = idx - currentModalIndex;
                 const tx = (offset * 100) + (dragPercent * 100);
                 card.style.transform = `translateX(${tx}%)`;
-                // 透明度渐变
                 if (offset === 0) {
                     card.style.opacity = 1 - Math.abs(dragPercent) * 0.3;
                 } else if ((offset === -1 && dragPercent > 0) || (offset === 1 && dragPercent < 0)) {
@@ -785,17 +793,13 @@
                 dragMode = null;
                 return;
             }
-
             isDragging = false;
             cardsContainer.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
             const deltaX = currentX - startX;
             const threshold = 80;
-
-            // 恢复透明度
             cardsContainer.querySelectorAll('.problem-card').forEach(card => {
                 card.style.opacity = '';
             });
-
             if (Math.abs(deltaX) > threshold) {
                 if (deltaX > 0) {
                     navigateProblems(-1);
@@ -803,56 +807,41 @@
                     navigateProblems(1);
                 }
             } else {
-                // 回到原位
                 updateCardsPosition(true);
             }
-
             dragMode = null;
         }
     }
 
-
-    // 检查URL参数，如果需要打开最后一题
+    // 检查URL参数打开特定题目
     function checkOpenProblem() {
         const urlParams = new URLSearchParams(window.location.search);
-
         if (urlParams.get('openLast') === 'true' && problemsData.length > 0) {
-            // 打开最后一题
             setTimeout(() => openProblemModal(problemsData.length - 1), 100);
-        }
-        else if (urlParams.get('openFirst') === 'true' && problemsData.length > 0) {
-            // 打开第一题
+        } else if (urlParams.get('openFirst') === 'true' && problemsData.length > 0) {
             setTimeout(() => openProblemModal(0), 100);
         }
     }
 
     // 初始化错题标记功能
     function initProblemCollection() {
-        // 绑定标记按钮点击事件
         document.querySelectorAll('.star-toggle').forEach(btn => {
             const problemId = btn.getAttribute('data-problem-id');
             const icon = btn.querySelector('i');
             const text = btn.querySelector('span');
-
-            // 根据本地存储设置初始状态
             if (markedProblems.has(problemId)) {
                 icon.classList.remove('far');
                 icon.classList.add('fas', 'text-warning');
                 text.textContent = '已标记';
                 btn.setAttribute('data-is-marked', 'true');
             }
-
-            // 点击切换标记状态
             btn.addEventListener('click', function() {
                 toggleProblemCollection(problemId, icon, text, btn);
             });
         });
     }
 
-    // 页面加载时初始化标记状态
     let markedProblems = new Set();
-
-    // 从localStorage加载已标记的题目
     function loadMarkedProblems() {
         const saved = localStorage.getItem('markedProblems');
         if (saved) {
@@ -860,7 +849,6 @@
         }
     }
 
-    // 保存标记状态到localStorage
     function saveMarkedProblems() {
         localStorage.setItem('markedProblems', JSON.stringify([...markedProblems]));
     }
@@ -868,32 +856,25 @@
     // 切换题目标记状态
     function toggleProblemCollection(problemId, icon, text, btn) {
         const isMarked = markedProblems.has(problemId.toString());
-
         if (!isMarked) {
-            // 标记题目
             markProblem(problemId, icon, text, btn);
         } else {
-            // 取消标记
             unmarkProblem(problemId, icon, text, btn);
         }
     }
 
-    // 标记错题（仅前端存储）
     function markProblem(problemId, icon, text, btn) {
         markedProblems.add(problemId.toString());
         saveMarkedProblems();
-
         icon.classList.remove('far');
         icon.classList.add('fas', 'text-warning');
         text.textContent = '已标记';
         btn.setAttribute('data-is-marked', 'true');
     }
 
-    // 取消标记错题（仅前端存储）
     function unmarkProblem(problemId, icon, text, btn) {
         markedProblems.delete(problemId.toString());
         saveMarkedProblems();
-
         icon.classList.remove('fas', 'text-warning');
         icon.classList.add('far');
         text.textContent = '标记';
@@ -902,9 +883,7 @@
 
     // 导出错题
     function exportProblems(collectionId, tagId) {
-        // 将本地标记的题目ID转换为数组
         const problemIds = Array.from(markedProblems);
-
         fetch('/problem/export-marked', {
             method: 'POST',
             headers: {
@@ -919,10 +898,8 @@
             .then(result => {
                 if (result === 'success') {
                     alert('错题导出成功！');
-                    // 清空本地标记
                     markedProblems.clear();
                     saveMarkedProblems();
-                    // 刷新页面显示
                     location.reload();
                     $('#exportModal').modal('hide');
                 } else {
@@ -941,32 +918,24 @@
             alert('当前没有标记的题目');
             return;
         }
-
         if (confirm('确定要清除所有标记吗？此操作不可恢复。')) {
             markedProblems.clear();
             saveMarkedProblems();
-
-            // 重置所有标记按钮的状态
             document.querySelectorAll('.star-toggle').forEach(btn => {
                 const icon = btn.querySelector('i');
                 const text = btn.querySelector('span');
-
                 icon.classList.remove('fas', 'text-warning');
                 icon.classList.add('far');
                 text.textContent = '标记';
                 btn.setAttribute('data-is-marked', 'false');
             });
-
             alert('已清除所有标记');
         }
     }
 
-    // 页面加载完成后初始化所有功能
     document.addEventListener('DOMContentLoaded', function() {
         initDragSupport();
         checkOpenProblem();
-
-        // 键盘快捷键支持
         document.addEventListener('keydown', function(e) {
             const modal = document.getElementById('problemModal');
             if (modal.style.display === 'flex') {
@@ -983,8 +952,39 @@
             }
         });
     });
-</script>
 
+    // ----------- 新增：modal区域视频占位符点击自动加载并自动播放 -----------
+    document.body.addEventListener('click', function(e) {
+        const placeholder = e.target.closest('.video-placeholder');
+        if (placeholder) {
+            // 获取宽高和src
+            const width = placeholder.style.width.replace('px','') || '560';
+            const height = placeholder.style.height.replace('px','') || '315';
+            let src = placeholder.dataset.src;
+
+            // 自动播放处理：YouTube/BiliBili等常见iframe都支持autoplay参数
+            if (src.includes('autoplay=1')) {
+                // 已有autoplay参数
+            } else if (src.includes('?')) {
+                src += '&autoplay=1';
+            } else {
+                src += '?autoplay=1';
+            }
+
+            const videoIframe = document.createElement('iframe');
+            videoIframe.src = src;
+            videoIframe.setAttribute('width', width);
+            videoIframe.setAttribute('height', height);
+            videoIframe.setAttribute('frameborder', '0');
+            videoIframe.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+            videoIframe.setAttribute('allowfullscreen', 'true');
+            // 插入iframe并自动播放
+            placeholder.parentNode.replaceChild(videoIframe, placeholder);
+        }
+    });
+    // ---------------------------------------------------------------
+
+</script>
 <style>
     .answer-toggle {
         cursor: pointer;
@@ -993,12 +993,10 @@
         padding: 5px 0;
         user-select: none;
     }
-
     .answer-toggle:hover {
         color: #0056b3;
         text-decoration: underline;
     }
-
     .problem-answer {
         margin-top: 10px;
         padding: 15px;
@@ -1006,7 +1004,6 @@
         border-left: 4px solid #28a745;
         border-radius: 4px;
     }
-
     .problem-item {
         margin-bottom: 30px;
         padding: 20px;
@@ -1016,11 +1013,9 @@
         cursor: pointer;
         transition: box-shadow 0.2s ease;
     }
-
     .problem-item:hover {
         box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     }
-
     .problem-header {
         display: flex;
         justify-content: space-between;
@@ -1029,35 +1024,28 @@
         padding-bottom: 10px;
         border-bottom: 1px solid #e9ecef;
     }
-
     .problem-number {
         font-weight: bold;
         color: #495057;
     }
-
     .problem-content {
         margin-bottom: 15px;
         line-height: 1.6;
     }
-
     .empty-state {
         text-align: center;
         padding: 40px 0;
     }
-
     .empty-state i {
         display: block;
         margin: 0 auto 15px;
         font-size: 32px;
         color: #ccc;
     }
-
     .empty-state span {
         display: block;
         color: #666;
     }
-
-    /* 分页样式优化 */
     .pagination-container {
         margin-top: 30px;
         display: flex;
@@ -1066,18 +1054,15 @@
         flex-wrap: wrap;
         gap: 15px;
     }
-
     .pagination-info {
         color: #666;
         font-size: 14px;
     }
-
     .pagination {
         display: flex;
         align-items: center;
         gap: 5px;
     }
-
     .page-link {
         display: inline-flex;
         align-items: center;
@@ -1092,39 +1077,32 @@
         transition: all 0.2s ease;
         font-size: 14px;
     }
-
     .page-link:hover {
         background-color: #e9ecef;
         border-color: #adb5bd;
         color: #0056b3;
         text-decoration: none;
     }
-
     .page-link.active {
         background-color: #007bff;
         border-color: #007bff;
         color: white;
     }
-
     .page-link.active:hover {
         background-color: #0056b3;
         border-color: #004085;
     }
-
     .page-link.ellipsis {
         border: none;
         background: none;
         color: #6c757d;
         cursor: default;
     }
-
     .page-link.ellipsis:hover {
         background: none;
         border: none;
         color: #6c757d;
     }
-
-    /* 弹窗样式 */
     .problem-modal {
         display: none;
         position: fixed;
@@ -1136,7 +1114,6 @@
         justify-content: center;
         align-items: center;
     }
-
     .modal-overlay {
         position: absolute;
         top: 0;
@@ -1146,7 +1123,6 @@
         background: rgba(0, 0, 0, 0.8);
         backdrop-filter: blur(4px);
     }
-
     .modal-content-wrapper {
         position: relative;
         width: 90%;
@@ -1157,14 +1133,12 @@
         overflow: hidden;
         border-radius: 12px;
     }
-
     .problem-cards-container {
         position: relative;
         width: 100%;
         height: 100%;
         overflow: hidden;
     }
-
     .problem-card {
         position: absolute;
         top: 0;
@@ -1179,11 +1153,9 @@
         transform: translateX(100%);
         transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
     }
-
     .problem-card.active {
         transform: translateX(0);
     }
-
     .modal-problem-header {
         display: flex;
         justify-content: space-between;
@@ -1192,19 +1164,16 @@
         padding-bottom: 15px;
         border-bottom: 2px solid #e9ecef;
     }
-
     .modal-problem-header h3 {
         margin: 0;
         color: #333;
         font-size: 1.5rem;
     }
-
     .modal-problem-content {
         margin-bottom: 20px;
         line-height: 1.8;
         font-size: 1.1rem;
     }
-
     .modal-answer-toggle {
         cursor: pointer;
         color: #007bff;
@@ -1214,11 +1183,9 @@
         font-weight: 500;
         transition: color 0.2s ease;
     }
-
     .modal-answer-toggle:hover {
         color: #0056b3;
     }
-
     .modal-problem-answer {
         margin-top: 15px;
         padding: 20px;
@@ -1228,8 +1195,6 @@
         font-size: 1.05rem;
         line-height: 1.7;
     }
-
-    /* 导航按钮 */
     .modal-close-btn {
         position: fixed;
         top: 20px;
@@ -1246,12 +1211,10 @@
         transition: all 0.2s ease;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-
     .modal-close-btn:hover {
         background: #fff;
         transform: scale(1.1);
     }
-
     .modal-nav-btn {
         position: fixed;
         top: 50%;
@@ -1268,27 +1231,21 @@
         transition: all 0.2s ease;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
-
     .modal-nav-btn:hover {
         background: #fff;
         transform: translateY(-50%) scale(1.1);
     }
-
     .modal-nav-btn.disabled {
         opacity: 0.3;
         cursor: not-allowed;
         pointer-events: none;
     }
-
     .prev-btn {
         left: 20px;
     }
-
     .next-btn {
         right: 20px;
     }
-
-    /* 跨页导航按钮 */
     .modal-page-btn {
         position: fixed;
         z-index: 10002;
@@ -1306,23 +1263,18 @@
         align-items: center;
         gap: 8px;
     }
-
     .modal-page-btn:hover {
         background: rgba(0, 123, 255, 1);
         transform: scale(1.05);
     }
-
     .prev-page-btn {
         bottom: 80px;
         left: 20px;
     }
-
     .next-page-btn {
         bottom: 80px;
         right: 20px;
     }
-
-    /* 题目指示器 */
     .problem-indicator {
         position: fixed;
         bottom: 20px;
@@ -1336,8 +1288,6 @@
         font-size: 14px;
         font-weight: 500;
     }
-
-    /* 导航提示 */
     .navigation-tip {
         position: fixed;
         top: 50%;
@@ -1352,47 +1302,37 @@
         opacity: 0;
         transition: opacity 0.2s ease;
     }
-
     .navigation-tip.show {
         opacity: 1;
     }
-
-    /* 响应式设计 */
     @media (max-width: 768px) {
         .pagination-container {
             flex-direction: column;
             align-items: center;
             text-align: center;
         }
-
         .pagination {
             flex-wrap: wrap;
             justify-content: center;
         }
-
         .modal-content-wrapper {
             width: 95%;
             height: 85%;
         }
-
         .problem-card {
             padding: 20px;
         }
-
         .modal-nav-btn {
             width: 50px;
             height: 50px;
             font-size: 20px;
         }
-
         .prev-btn {
             left: 10px;
         }
-
         .next-btn {
             right: 10px;
         }
-
         .modal-close-btn {
             top: 10px;
             right: 10px;
@@ -1400,21 +1340,22 @@
             height: 40px;
             font-size: 18px;
         }
-
         .modal-page-btn {
             padding: 10px 16px;
             font-size: 12px;
         }
-
         .prev-page-btn {
             bottom: 60px;
             left: 10px;
         }
-
         .next-page-btn {
             bottom: 60px;
             right: 10px;
         }
+    }
+    /* 视频占位符样式，可根据需要自行补充 */
+    .video-placeholder {
+        /* 基本样式已在JS内联设置 */
     }
 </style>
 
