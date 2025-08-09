@@ -237,6 +237,7 @@
     let isDragging = false;
     let startX = 0;
     let currentTranslateX = 0;
+    let markedProblems = new Set(); // 移动到这里，避免初始化顺序问题
 
     // 切换答案显示/隐藏
     function toggleAnswer(problemId) {
@@ -358,69 +359,18 @@
         });
     }
 
-    // 页面加载完成后渲染LaTeX公式和替换iframe（题目列表和详情中均执行）
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log('题目列表页面加载完成');
-
-        // 初始化题目数据
-        initProblemsData();
-
-        // 渲染所有LaTeX公式
-        function renderLatex() {
-            document.querySelectorAll('.problem-content, .problem-answer').forEach(el => {
-                if (el.dataset.latexRendered) {
-                    return;
-                }
-                renderLatexInElement(el);
-                el.dataset.latexRendered = 'true';
-            });
+    // 加载已标记的题目
+    function loadMarkedProblems() {
+        const saved = localStorage.getItem('markedProblems');
+        if (saved) {
+            markedProblems = new Set(JSON.parse(saved));
         }
+    }
 
-        renderLatex();
-
-        // 监听答案显示事件
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    const target = mutation.target;
-                    if (target.classList.contains('problem-answer') && target.style.display === 'block') {
-                        if (!target.dataset.latexRendered) {
-                            renderLatex();
-                        }
-                    }
-                }
-            });
-        });
-        document.querySelectorAll('.problem-answer').forEach(el => {
-            observer.observe(el, { attributes: true, attributeFilter: ['style'] });
-        });
-
-        // 替换题目列表中的iframe为占位符
-        document.querySelectorAll('.problem-content, .problem-answer').forEach(function(container) {
-            replaceIframesWithPlaceholders(container);
-        });
-
-        // 加载已标记的题目
-        loadMarkedProblems();
-        initProblemCollection();
-
-        // 确认导出按钮事件
-        const confirmExportBtn = document.getElementById('confirmExport');
-        if (confirmExportBtn) {
-            confirmExportBtn.addEventListener('click', function() {
-                const collectionId = document.getElementById('collectionSelect').value;
-                if (!collectionId) {
-                    alert('请选择错题集');
-                    return;
-                }
-                if (markedProblems.size === 0) {
-                    alert('请先标记错题');
-                    return;
-                }
-                exportProblems(collectionId, tagId);
-            });
-        }
-    });
+    // 保存已标记的题目
+    function saveMarkedProblems() {
+        localStorage.setItem('markedProblems', JSON.stringify([...markedProblems]));
+    }
 
     // 初始化题目数据
     function initProblemsData() {
@@ -720,6 +670,16 @@
         }, 2000);
     }
 
+    // 检查URL参数打开特定题目
+    function checkOpenProblem() {
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('openLast') === 'true' && problemsData.length > 0) {
+            setTimeout(() => openProblemModal(problemsData.length - 1), 100);
+        } else if (urlParams.get('openFirst') === 'true' && problemsData.length > 0) {
+            setTimeout(() => openProblemModal(0), 100);
+        }
+    }
+
     // 添加拖拽支持
     function initDragSupport() {
         const modal = document.getElementById('problemModal');
@@ -813,16 +773,6 @@
         }
     }
 
-    // 检查URL参数打开特定题目
-    function checkOpenProblem() {
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.get('openLast') === 'true' && problemsData.length > 0) {
-            setTimeout(() => openProblemModal(problemsData.length - 1), 100);
-        } else if (urlParams.get('openFirst') === 'true' && problemsData.length > 0) {
-            setTimeout(() => openProblemModal(0), 100);
-        }
-    }
-
     // 初始化错题标记功能
     function initProblemCollection() {
         document.querySelectorAll('.star-toggle').forEach(btn => {
@@ -839,18 +789,6 @@
                 toggleProblemCollection(problemId, icon, text, btn);
             });
         });
-    }
-
-    let markedProblems = new Set();
-    function loadMarkedProblems() {
-        const saved = localStorage.getItem('markedProblems');
-        if (saved) {
-            markedProblems = new Set(JSON.parse(saved));
-        }
-    }
-
-    function saveMarkedProblems() {
-        localStorage.setItem('markedProblems', JSON.stringify([...markedProblems]));
     }
 
     // 切换题目标记状态
@@ -879,6 +817,36 @@
         icon.classList.add('far');
         text.textContent = '标记';
         btn.setAttribute('data-is-marked', 'false');
+    }
+
+    // 新建错题集并导出
+    function createCollectionAndExport(collectionName, tagId) {
+        fetch('/collection/create-and-export', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: collectionName,
+                problemIds: Array.from(markedProblems)
+            })
+        })
+            .then(response => response.text())
+            .then(result => {
+                if (result === 'success') {
+                    alert('错题集创建成功，错题导出成功！');
+                    markedProblems.clear();
+                    saveMarkedProblems();
+                    location.reload();
+                    $('#exportModal').modal('hide');
+                } else {
+                    alert('创建失败，请重试');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('创建失败，请重试');
+            });
     }
 
     // 导出错题
@@ -933,9 +901,102 @@
         }
     }
 
+    // 页面加载完成后渲染LaTeX公式和替换iframe（题目列表和详情中均执行）
     document.addEventListener('DOMContentLoaded', function() {
+        console.log('题目列表页面加载完成');
+
+        // 初始化题目数据
+        initProblemsData();
+
+        // 渲染所有LaTeX公式
+        function renderLatex() {
+            document.querySelectorAll('.problem-content, .problem-answer').forEach(el => {
+                if (el.dataset.latexRendered) {
+                    return;
+                }
+                renderLatexInElement(el);
+                el.dataset.latexRendered = 'true';
+            });
+        }
+
+        renderLatex();
+
+        // 监听答案显示事件
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const target = mutation.target;
+                    if (target.classList.contains('problem-answer') && target.style.display === 'block') {
+                        if (!target.dataset.latexRendered) {
+                            renderLatex();
+                        }
+                    }
+                }
+            });
+        });
+        document.querySelectorAll('.problem-answer').forEach(el => {
+            observer.observe(el, { attributes: true, attributeFilter: ['style'] });
+        });
+
+        // 替换题目列表中的iframe为占位符
+        document.querySelectorAll('.problem-content, .problem-answer').forEach(function(container) {
+            replaceIframesWithPlaceholders(container);
+        });
+
+        // 加载已标记的题目
+        loadMarkedProblems();
+        initProblemCollection();
+
+        // 导出方式切换事件
+        document.querySelectorAll('input[name="exportType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const existingGroup = document.getElementById('existingCollectionGroup');
+                const newGroup = document.getElementById('newCollectionGroup');
+
+                if (this.value === 'existing') {
+                    existingGroup.style.display = 'block';
+                    newGroup.style.display = 'none';
+                } else {
+                    existingGroup.style.display = 'none';
+                    newGroup.style.display = 'block';
+                }
+            });
+        });
+
+        // 确认导出按钮事件
+        const confirmExportBtn = document.getElementById('confirmExport');
+        if (confirmExportBtn) {
+            confirmExportBtn.addEventListener('click', function() {
+                if (markedProblems.size === 0) {
+                    alert('请先标记错题');
+                    return;
+                }
+
+                const exportType = document.querySelector('input[name="exportType"]:checked').value;
+
+                if (exportType === 'existing') {
+                    const collectionId = document.getElementById('collectionSelect').value;
+                    if (!collectionId) {
+                        alert('请选择错题集');
+                        return;
+                    }
+                    exportProblems(collectionId, tagId);
+                } else {
+                    const collectionName = document.getElementById('newCollectionName').value.trim();
+                    if (!collectionName) {
+                        alert('请输入错题集名称');
+                        return;
+                    }
+                    createCollectionAndExport(collectionName, tagId);
+                }
+            });
+        }
+
+        // 初始化拖拽支持 - 移到最后
         initDragSupport();
         checkOpenProblem();
+
+        // 键盘事件监听
         document.addEventListener('keydown', function(e) {
             const modal = document.getElementById('problemModal');
             if (modal.style.display === 'flex') {
@@ -1370,16 +1431,42 @@
                 </button>
             </div>
             <div class="modal-body">
+                <!-- 导出方式选择 -->
                 <div class="form-group">
+                    <label>导出方式</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportType" id="exportToExisting" value="existing" checked>
+                        <label class="form-check-label" for="exportToExisting">
+                            导出到已有错题集
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportType" id="exportToNew" value="new">
+                        <label class="form-check-label" for="exportToNew">
+                            新建错题集并导出
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 选择已有错题集 -->
+                <div class="form-group" id="existingCollectionGroup">
                     <label for="collectionSelect">选择错题集</label>
                     <select class="form-control" id="collectionSelect" style="width: 100%;">
                         <option value="">请选择错题集</option>
                         <option th:each="collection : ${collections}" th:value="${collection.id}" th:text="${collection.name}"></option>
                     </select>
                 </div>
+
+                <!-- 新建错题集 -->
+                <div class="form-group" id="newCollectionGroup" style="display: none;">
+                    <label for="newCollectionName">新错题集名称</label>
+                    <input type="text" class="form-control" id="newCollectionName" placeholder="请输入错题集名称">
+                    <small class="form-text text-muted">例如：数学-函数错题集</small>
+                </div>
+
                 <div class="form-group">
                     <label>导出说明</label>
-                    <p class="text-muted">将当前知识点下的所有错题导出到选定的错题集中</p>
+                    <p class="text-muted">将当前已标记的错题导出到错题集中</p>
                 </div>
             </div>
             <div class="modal-footer">

@@ -16,6 +16,14 @@
         <div class="card-header">
             <h3><i class="fas fa-file-alt"></i> 错题列表</h3>
             <div style="float: right;">
+                <!-- 导出错题按钮 -->
+                <button class="btn btn-danger" data-toggle="modal" data-target="#exportModal">
+                    <i class="fas fa-file-export"></i> 导出错题
+                </button>
+                <!-- 清除标记按钮 -->
+                <button class="btn btn-warning" onclick="clearAllMarks()">
+                    <i class="fas fa-trash"></i> 清除标记
+                </button>
                 <a th:href="@{'/collection/edit/' + ${collection.id}}" class="btn btn-warning">
                     <i class="fas fa-edit"></i> 编辑错题集
                 </a>
@@ -35,6 +43,11 @@
                     <div th:each="problem, iterStat : ${problems}" class="problem-item" th:data-problem-index="${iterStat.index}" th:data-problem-id="${problem.id}">
                         <div class="problem-header">
                             <span class="problem-number">第 [[${(pageResult.pageNum - 1) * pageResult.pageSize + iterStat.index + 1}]] 题</span>
+                            <!-- 错题标记按钮 -->
+                            <button class="btn btn-sm btn-link star-toggle" th:data-problem-id="${problem.id}">
+                                <i class="far fa-star"></i>
+                                <span>标记</span>
+                            </button>
                             <div class="problem-actions">
                                 <!-- 放大查看按钮 -->
                                 <button class="btn btn-sm btn-info" th:onclick="'openProblemModal(' + ${iterStat.index} + ')'">
@@ -140,6 +153,63 @@
     <div id="navigationTip" class="navigation-tip"></div>
 </div>
 
+<!-- 导出错题模态框 -->
+<div class="modal fade" id="exportModal" tabindex="-1" role="dialog" aria-labelledby="exportModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exportModalLabel">导出错题</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <!-- 导出方式选择 -->
+                <div class="form-group">
+                    <label>导出方式</label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportType" id="exportToExisting" value="existing" checked>
+                        <label class="form-check-label" for="exportToExisting">
+                            导出到已有错题集
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="exportType" id="exportToNew" value="new">
+                        <label class="form-check-label" for="exportToNew">
+                            新建错题集并导出
+                        </label>
+                    </div>
+                </div>
+
+                <!-- 选择已有错题集 -->
+                <div class="form-group" id="existingCollectionGroup">
+                    <label for="collectionSelect">选择错题集</label>
+                    <select class="form-control" id="collectionSelect" style="width: 100%;">
+                        <option value="">请选择错题集</option>
+                        <option th:each="collection : ${collections}" th:value="${collection.id}" th:text="${collection.name}"></option>
+                    </select>
+                </div>
+
+                <!-- 新建错题集 -->
+                <div class="form-group" id="newCollectionGroup" style="display: none;">
+                    <label for="newCollectionName">新错题集名称</label>
+                    <input type="text" class="form-control" id="newCollectionName" placeholder="请输入错题集名称">
+                    <small class="form-text text-muted">例如：数学-函数错题集</small>
+                </div>
+
+                <div class="form-group">
+                    <label>导出说明</label>
+                    <p class="text-muted">将当前已标记的错题导出到错题集中</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" id="confirmExport">导出</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script th:replace="~{fragments/layout :: sidebar-script}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
@@ -154,6 +224,7 @@
     let totalPages = parseInt('[[${pageResult != null ? pageResult.pages : 1}]]');
     let collectionId = '[[${collection != null ? collection.id : 0}]]';
     let pageSize = parseInt('[[${pageResult != null ? pageResult.pageSize : 10}]]');
+    let markedProblems = new Set(); // 新增：用于存储标记的题目
 
     // 切换答案显示/隐藏
     function toggleAnswer(problemId) {
@@ -285,6 +356,147 @@
         });
     }
 
+    // 新增：加载已标记的题目
+    function loadMarkedProblems() {
+        const saved = localStorage.getItem('markedProblems_collection_' + collectionId);
+        if (saved) {
+            markedProblems = new Set(JSON.parse(saved));
+        }
+    }
+
+    // 新增：保存已标记的题目
+    function saveMarkedProblems() {
+        localStorage.setItem('markedProblems_collection_' + collectionId, JSON.stringify([...markedProblems]));
+    }
+
+    // 新增：初始化错题标记功能
+    function initProblemCollection() {
+        document.querySelectorAll('.star-toggle').forEach(btn => {
+            const problemId = btn.getAttribute('data-problem-id');
+            const icon = btn.querySelector('i');
+            const text = btn.querySelector('span');
+            if (markedProblems.has(problemId)) {
+                icon.classList.remove('far');
+                icon.classList.add('fas', 'text-warning');
+                text.textContent = '已标记';
+                btn.setAttribute('data-is-marked', 'true');
+            }
+            btn.addEventListener('click', function() {
+                toggleProblemCollection(problemId, icon, text, btn);
+            });
+        });
+    }
+
+    // 新增：切换题目标记状态
+    function toggleProblemCollection(problemId, icon, text, btn) {
+        const isMarked = markedProblems.has(problemId.toString());
+        if (!isMarked) {
+            markProblem(problemId, icon, text, btn);
+        } else {
+            unmarkProblem(problemId, icon, text, btn);
+        }
+    }
+
+    function markProblem(problemId, icon, text, btn) {
+        markedProblems.add(problemId.toString());
+        saveMarkedProblems();
+        icon.classList.remove('far');
+        icon.classList.add('fas', 'text-warning');
+        text.textContent = '已标记';
+        btn.setAttribute('data-is-marked', 'true');
+    }
+
+    function unmarkProblem(problemId, icon, text, btn) {
+        markedProblems.delete(problemId.toString());
+        saveMarkedProblems();
+        icon.classList.remove('fas', 'text-warning');
+        icon.classList.add('far');
+        text.textContent = '标记';
+        btn.setAttribute('data-is-marked', 'false');
+    }
+
+    // 新增：新建错题集并导出
+    function createCollectionAndExport(collectionName) {
+        fetch('/collection/create-and-export', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                name: collectionName,
+                problemIds: Array.from(markedProblems)
+            })
+        })
+            .then(response => response.text())
+            .then(result => {
+                if (result === 'success') {
+                    alert('错题集创建成功，错题导出成功！');
+                    markedProblems.clear();
+                    saveMarkedProblems();
+                    location.reload();
+                    $('#exportModal').modal('hide');
+                } else {
+                    alert('创建失败，请重试');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('创建失败，请重试');
+            });
+    }
+
+    // 新增：导出错题
+    function exportProblems(collectionId) {
+        const problemIds = Array.from(markedProblems);
+        fetch('/problem/export-marked', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                collectionId: collectionId,
+                problemIds: problemIds
+            })
+        })
+            .then(response => response.text())
+            .then(result => {
+                if (result === 'success') {
+                    alert('错题导出成功！');
+                    markedProblems.clear();
+                    saveMarkedProblems();
+                    location.reload();
+                    $('#exportModal').modal('hide');
+                } else {
+                    alert('导出失败，请重试');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('导出失败，请重试');
+            });
+    }
+
+    // 新增：清除所有标记
+    function clearAllMarks() {
+        if (markedProblems.size === 0) {
+            alert('当前没有标记的题目');
+            return;
+        }
+        if (confirm('确定要清除所有标记吗？此操作不可恢复。')) {
+            markedProblems.clear();
+            saveMarkedProblems();
+            document.querySelectorAll('.star-toggle').forEach(btn => {
+                const icon = btn.querySelector('i');
+                const text = btn.querySelector('span');
+                icon.classList.remove('fas', 'text-warning');
+                icon.classList.add('far');
+                text.textContent = '标记';
+                btn.setAttribute('data-is-marked', 'false');
+            });
+            alert('已清除所有标记');
+        }
+    }
+
     // 页面加载完成后渲染LaTeX公式和替换iframe、img（题目列表和详情中均执行）
     document.addEventListener('DOMContentLoaded', function() {
         console.log('错题集详情页面加载完成');
@@ -321,6 +533,55 @@
             replaceIframesWithPlaceholders(container);
             styleImages(container);
         });
+
+        // 新增：加载已标记的题目并初始化标记功能
+        loadMarkedProblems();
+        initProblemCollection();
+
+        // 新增：导出方式切换事件
+        document.querySelectorAll('input[name="exportType"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                const existingGroup = document.getElementById('existingCollectionGroup');
+                const newGroup = document.getElementById('newCollectionGroup');
+
+                if (this.value === 'existing') {
+                    existingGroup.style.display = 'block';
+                    newGroup.style.display = 'none';
+                } else {
+                    existingGroup.style.display = 'none';
+                    newGroup.style.display = 'block';
+                }
+            });
+        });
+
+        // 新增：确认导出按钮事件
+        const confirmExportBtn = document.getElementById('confirmExport');
+        if (confirmExportBtn) {
+            confirmExportBtn.addEventListener('click', function() {
+                if (markedProblems.size === 0) {
+                    alert('请先标记错题');
+                    return;
+                }
+
+                const exportType = document.querySelector('input[name="exportType"]:checked').value;
+
+                if (exportType === 'existing') {
+                    const targetCollectionId = document.getElementById('collectionSelect').value;
+                    if (!targetCollectionId) {
+                        alert('请选择错题集');
+                        return;
+                    }
+                    exportProblems(targetCollectionId);
+                } else {
+                    const collectionName = document.getElementById('newCollectionName').value.trim();
+                    if (!collectionName) {
+                        alert('请输入错题集名称');
+                        return;
+                    }
+                    createCollectionAndExport(collectionName);
+                }
+            });
+        }
 
         // 初始化拖拽支持
         initDragSupport();
@@ -409,7 +670,7 @@
         updateCardsPosition(false);
     }
 
-    // 创建单个题目卡片
+    // 创建单个题目卡片（在modal中）
     function createProblemCard(index) {
         const problem = problemsData[index];
         const card = document.createElement('div');
@@ -419,6 +680,10 @@
         card.innerHTML = `
       <div class="modal-problem-header">
         <h3>${problem.number}</h3>
+        <button class="btn btn-sm btn-link star-toggle" data-problem-id="${problem.id}">
+          <i class="far fa-star"></i>
+          <span>标记</span>
+        </button>
       </div>
       <div class="modal-problem-content"></div>
       <div class="modal-answer-toggle" onclick="toggleModalAnswer(${index})">
@@ -437,6 +702,19 @@
         replaceIframesWithPlaceholders(modalAnswer);
         styleImages(modalContent);
         styleImages(modalAnswer);
+
+        // 新增：处理modal中的标记按钮
+        const starBtn = card.querySelector('.star-toggle');
+        const icon = starBtn.querySelector('i');
+        const text = starBtn.querySelector('span');
+        if (markedProblems.has(problem.id.toString())) {
+            icon.classList.remove('far');
+            icon.classList.add('fas', 'text-warning');
+            text.textContent = '已标记';
+        }
+        starBtn.addEventListener('click', function() {
+            toggleProblemCollection(problem.id, icon, text, starBtn);
+        });
 
         return card;
     }
@@ -641,7 +919,7 @@
         document.addEventListener('touchend', handleDragEnd);
 
         function handleDragStart(e) {
-            if (e.target.closest('.modal-answer-toggle')) {
+            if (e.target.closest('.star-toggle') || e.target.closest('.modal-answer-toggle')) {
                 return;
             }
             isDragging = true;
