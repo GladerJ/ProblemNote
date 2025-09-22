@@ -140,7 +140,7 @@
     </div>
     <div class="pagination">
         <a th:if="${pageResult.hasPreviousPage}"
-           th:href="${baseUrl + '?pageNum=' + (pageResult.pageNum - 1)}"
+           th:href="${baseUrl + (#strings.contains(baseUrl, '?') ? '&' : '?') + 'pageNum=' + (pageResult.pageNum - 1)}"
            class="page-link">
             <i class="fas fa-chevron-left"></i> 上一页
         </a>
@@ -149,12 +149,12 @@
               th:if="${pageNum >= pageResult.pageNum - 2 && pageNum <= pageResult.pageNum + 2}"
               class="page-link"
               th:classappend="${pageNum == pageResult.pageNum} ? 'active' : ''">
-            <a th:href="${baseUrl + '?pageNum=' + pageNum}"
+            <a th:href="${baseUrl + (#strings.contains(baseUrl, '?') ? '&' : '?') + 'pageNum=' + pageNum}"
                th:text="${pageNum}">1</a>
         </span>
 
         <a th:if="${pageResult.hasNextPage}"
-           th:href="${baseUrl + '?pageNum=' + (pageResult.pageNum + 1)}"
+           th:href="${baseUrl + (#strings.contains(baseUrl, '?') ? '&' : '?') + 'pageNum=' + (pageResult.pageNum + 1)}"
            class="page-link">
             下一页 <i class="fas fa-chevron-right"></i>
         </a>
